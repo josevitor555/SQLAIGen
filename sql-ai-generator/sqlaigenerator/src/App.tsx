@@ -11,7 +11,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'upload' | 'schema' | 'query' | 'history'>('upload');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [currentDataset, setCurrentDataset] = useState<string>('No dataset loaded');
+  const [currentDataset, setCurrentDataset] = useState<string>('Nenhum conjunto de dados carregado');
 
   const handleTabChange = (tab: 'upload' | 'schema' | 'query' | 'history') => {
     setActiveTab(tab);
@@ -29,7 +29,7 @@ function App() {
 
   const handleDeleteDataset = () => {
     // Resetar estado do app após deletar dataset
-    setCurrentDataset('No dataset loaded');
+    setCurrentDataset('Nenhum conjunto de dados carregado');
     setHistory([]);
     setActiveTab('upload'); // Voltar para tela de upload
   };

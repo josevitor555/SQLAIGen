@@ -98,7 +98,7 @@ export default class IngestionService {
       let resolved = false
 
       const stream = fs.createReadStream(filePath)
-        .pipe(csvParser({ separator: ';' }))  // Usar ponto e vírgula como delimitador
+        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
         .on('data', (row) => {
           if (!resolved) {
             // Pega os nomes das colunas (keys do primeiro objeto)
@@ -148,38 +148,57 @@ export default class IngestionService {
     let rowCount = 0
     const rows: any[] = []
 
+    console.log('    📥 Lendo dados do CSV...')
     await new Promise<void>((resolve, reject) => {
       fs.createReadStream(filePath)
-        .pipe(csvParser({ separator: ';' }))
+        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
         .on('data', (row) => {
           rows.push(row)
         })
         .on('end', () => resolve())
         .on('error', reject)
     })
+    console.log(`    ✅ ${rows.length} linhas lidas do CSV`)
 
-    // Inserir dados em lotes
-    const batchSize = 100
+    // Inserir dados em lotes usando bulk insert para melhor performance
+    const batchSize = 500 // Aumentado para melhor performance
+    const totalBatches = Math.ceil(rows.length / batchSize)
+
+    console.log(`    💾 Inserindo dados em ${totalBatches} lotes de até ${batchSize} linhas...`)
+
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize)
+      const batchNumber = Math.floor(i / batchSize) + 1
 
+      // Preparar valores para bulk insert
+      const valueSets: any[][] = []
       for (const row of batch) {
         const values = columnsWithTypes.map(col => {
           const value = row[col.name]
           return value === undefined || value === null || value === '' ? null : value
         })
-
-        const placeholders = values.map(() => '?').join(', ')
-        const columnNames = columnsWithTypes.map(col => `"${col.name}"`).join(', ')
-
-        await db.rawQuery(
-          `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders})`,
-          values
-        )
-        rowCount++
+        valueSets.push(values)
       }
+
+      // Construir query de bulk insert usando Knex query builder
+      const columnNames = columnsWithTypes.map(col => col.name)
+
+      // Usar o query builder do Knex para bulk insert (mais seguro e compatível)
+      await db.table(tableName).multiInsert(
+        valueSets.map(values => {
+          const rowData: Record<string, any> = {}
+          columnNames.forEach((name, idx) => {
+            rowData[name] = values[idx]
+          })
+          return rowData
+        })
+      )
+
+      rowCount += batch.length
+      console.log(`      ✓ Lote ${batchNumber}/${totalBatches} inserido (${rowCount}/${rows.length} linhas)`)
     }
 
+    console.log(`    ✅ Total de ${rowCount} linhas inseridas com sucesso`)
     return rowCount
   }
 
@@ -196,7 +215,7 @@ export default class IngestionService {
     await new Promise<void>((resolve, reject) => {
       let count = 0
       fs.createReadStream(filePath)
-        .pipe(csvParser({ separator: ';' }))
+        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
         .on('data', (row) => {
           if (count < sampleSize) {
             sampleRows.push(row)

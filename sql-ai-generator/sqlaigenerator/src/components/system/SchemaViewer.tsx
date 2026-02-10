@@ -114,12 +114,12 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
     }
 
     return (
-        <div className="max-w-4xl mx-auto py-12 px-6 fade-in h-full overflow-auto">
+        <div className="max-w-6xl mx-auto py-12 px-6 fade-in h-full overflow-auto">
             <header className="flex items-end justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Semantic Context</h1>
+                    <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Contexto Semântico</h1>
                     <p className="text-base text-muted-foreground">
-                        The AI utilizes this inferred schema to map natural language to SQL logic. Verify data types below.
+                        A IA utiliza este esquema inferido para mapear linguagem natural para lógica SQL. Verifique os tipos de dados abaixo.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -130,7 +130,7 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
                         onClick={handleDeleteDataset}
                         disabled={isDeleting}
                         className="text-muted-foreground hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Delete dataset"
+                        title="Deletar conjunto de dados"
                     >
                         {isDeleting ? (
                             <Loader2 size={18} className="animate-spin" />
@@ -145,10 +145,10 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/10 bg-white/2">
-                            <th className="py-4 px-4 text-base font-semibold text-muted-foreground uppercase">Column Name</th>
-                            <th className="py-4 px-4 text-base font-semibold text-muted-foreground uppercase">Inferred Type</th>
-                            <th className="py-4 px-4 text-base font-semibold text-muted-foreground uppercase">Example Value</th>
-                            <th className="py-4 px-4 text-base font-semibold text-muted-foreground uppercase">Description</th>
+                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Nome da Coluna</th>
+                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Tipo Inferido</th>
+                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Valor de Exemplo</th>
+                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Descrição</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm divide-y divide-white/5">
@@ -179,7 +179,7 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
                     onClick={onNavigateToQuery}
                     className="group flex items-center gap-2 text-sm font-medium text-foreground hover:text-muted-foreground transition-all"
                 >
-                    Proceed to Query Lab
+                    Prosseguir para o Laboratório de Consultas
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>

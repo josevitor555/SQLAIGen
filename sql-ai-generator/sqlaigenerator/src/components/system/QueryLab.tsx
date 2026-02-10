@@ -62,9 +62,9 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
     return (
         <div className="max-w-4xl mx-auto py-12 px-6 fade-in h-full overflow-auto">
             <header className="mb-8">
-                <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Natural Language to SQL</h1>
+                <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Linguagem Natural para SQL</h1>
                 <p className="text-base text-muted-foreground max-w-2xl">
-                    Ask questions about your data. The system generates <span className="font-mono text-xs bg-muted/20 text-foreground px-1.5 py-0.5 rounded">SELECT</span> statements based strictly on the provided CSV structure.
+                    Faça perguntas sobre seus dados. O sistema gera instruções <span className="font-mono text-xs bg-muted/20 text-foreground px-1.5 py-0.5 rounded">SELECT</span> baseadas estritamente na estrutura CSV fornecida.
                     {/* <span className="bg-muted p-4 rounded-full block mt-4 text-amber-500/90 text-base flex items-center gap-1.5">
                         <Info size={14} />
                         Generated queries are for educational review and are not executed.
@@ -79,12 +79,12 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                     onChange={(e) => setQuery(e.target.value)}
                     rows={3}
                     className="w-full resize-none border-none bg-transparent p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                    placeholder="e.g., Show me the top 5 students with the highest GPA enrolled in CS-101..."
+                    placeholder="ex: Mostre-me os 5 melhores alunos com o maior GPA matriculados em CS-101..."
                 />
                 <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-white/5">
                     <div className="text-base text-muted-foreground flex items-center gap-1.5">
                         <Database size={14} />
-                        Context: <span className="text-muted-foreground">{currentDataset}</span>
+                        Contexto: <span className="text-muted-foreground">{currentDataset}</span>
                     </div>
                     <button
                         onClick={generateSQL}
@@ -92,7 +92,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                         className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-xs font-medium py-2 px-4 rounded-lg shadow-sm transition-all flex items-center gap-2"
                     >
                         {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-                        Generate SQL
+                        Gerar SQL
                     </button>
                 </div>
             </div>
@@ -102,7 +102,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                 <div className="py-12 flex justify-center">
                     <div className="flex flex-col items-center gap-3">
                         <Loader2 size={32} className="text-white/20 animate-spin" />
-                        <span className="text-base text-white/40 font-medium">Analyzing schema relationships...</span>
+                        <span className="text-base text-white/40 font-medium">Analisando relacionamentos do esquema...</span>
                     </div>
                 </div>
             )}
@@ -111,10 +111,10 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
             {result && result.success && (
                 <div className="mt-10 fade-in">
                     <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-base font-medium text-foreground">Generated Query</h3>
+                        <h3 className="text-base font-medium text-foreground">Consulta Gerada</h3>
                         <div className="flex gap-2">
-                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">READ ONLY</span>
-                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">POSTGRESQL DIALECT</span>
+                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">SOMENTE LEITURA</span>
+                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">DIALETO POSTGRESQL</span>
                         </div>
                     </div>
 
@@ -145,7 +145,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                     <div className="mt-4 p-4 status-info rounded-xl flex gap-3">
                         <ShieldAlert className="text-blue-500 shrink-0" size={18} />
                         <p className="text-base text-subtle leading-relaxed">
-                            <strong className="text-foreground">AI Generated SQL:</strong> This query was generated based on your dataset schema and indexed column metadata using vector similarity search.
+                            <strong className="text-foreground">SQL Gerado por IA:</strong> Esta consulta foi gerada com base no esquema do seu conjunto de dados e metadados de colunas indexadas usando busca de similaridade vetorial.
                         </p>
                     </div>
                 </div>
@@ -158,15 +158,15 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                         <div className="w-12 h-12 bg-muted/10 rounded-full flex items-center justify-center mb-4 border border-subtle">
                             <Search className="text-subtle" size={24} />
                         </div>
-                        <h3 className="text-base font-medium text-foreground mb-2">Information Not Available</h3>
+                        <h3 className="text-base font-medium text-foreground mb-2">Informação Não Disponível</h3>
                         <p className="text-sm text-subtle max-w-md">
-                            {error || `The current dataset does not contain information regarding "${query}". The AI is restricted to the uploaded schema to prevent fabrication.`}
+                            {error || `O conjunto de dados atual não contém informações sobre "${query}". A IA é restrita ao esquema enviado para evitar fabricação.`}
                         </p>
                         <button
                             onClick={() => setQuery('')}
                             className="mt-6 text-xs font-medium text-foreground hover:text-muted-foreground underline underline-offset-4 transition-colors"
                         >
-                            Try a different question
+                            Tente uma pergunta diferente
                         </button>
                     </div>
                 </div>

@@ -26,20 +26,36 @@ export default class CsvsController {
     }
 
     try {
+      console.log(`📤 Recebendo upload: ${csvFile.clientName} (${(csvFile.size / 1024).toFixed(2)} KB)`)
+
       // Move o arquivo para uma pasta temporária
       await csvFile.move(app.makePath('tmp/uploads'))
       const filePath = csvFile.filePath!
+      console.log(`✅ Arquivo salvo em: ${filePath}`)
 
       // DISPARA O GATILHO (O seu IngestionService)
+      console.log('🚀 Iniciando processamento do CSV...')
       const result = await this.ingestionService.processCSV(filePath, csvFile.clientName)
+      console.log('✅ Processamento concluído com sucesso!')
 
       return response.ok({
         message: 'Dataset processado com sucesso!',
         data: result
       })
     } catch (error) {
-      console.error(error)
-      return response.internalServerError({ message: 'Erro ao processar o gatilho de ingestão' })
+      console.error('❌ Erro ao processar CSV:', error)
+
+      // Fornecer mensagem de erro mais detalhada
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+      const errorStack = error instanceof Error ? error.stack : undefined
+
+      console.error('Stack trace:', errorStack)
+
+      return response.internalServerError({
+        message: 'Erro ao processar o arquivo CSV',
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      })
     }
   }
 }

@@ -13,10 +13,10 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }: SidebarProps) {
     const navItems = [
-        { id: 'upload', label: 'Data Source', icon: Upload },
-        { id: 'schema', label: 'Semantic Schema', icon: Database },
-        { id: 'query', label: 'Query Lab', icon: Terminal },
-        { id: 'history', label: 'History', icon: History },
+        { id: 'upload', label: 'Fonte de Dados', icon: Upload },
+        { id: 'schema', label: 'Esquema Semântico', icon: Database },
+        { id: 'query', label: 'Laboratório de Consultas', icon: Terminal },
+        { id: 'history', label: 'Histórico', icon: History },
     ] as const;
 
     return (
@@ -60,8 +60,8 @@ export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }
                         <User size={16} />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-base font-medium text-sidebar-foreground">Student User</span>
-                        <span className="text-base text-muted-foreground">Academic License</span>
+                        <span className="text-base font-medium text-sidebar-foreground">Usuário Aluno</span>
+                        <span className="text-base text-muted-foreground">Licença Acadêmica</span>
                     </div>
                 </div>
             </div>

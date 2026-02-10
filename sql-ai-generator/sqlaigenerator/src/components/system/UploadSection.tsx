@@ -68,11 +68,11 @@ export function UploadSection({ onSchemaReady, onNavigateToSchema }: UploadSecti
     return (
         <div className="max-w-3xl mx-auto py-12 px-6 fade-in h-full flex flex-col items-center justify-center">
             <header className="mb-10 text-center md:text-left w-full">
-                <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2">Dataset Configuration</h1>
+                <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2">Configuração do Conjunto de Dados</h1>
                 <p className="text-base text-muted-foreground leading-relaxed max-w-xl">
-                    Upload a CSV file to establish the source of truth for the AI model.
+                    Faça upload de um arquivo CSV para estabelecer a fonte da verdade para o modelo de IA.
                     <br />
-                    This system generates SQL for educational exploration and does not execute queries against a live production database.
+                    Este sistema gera SQL para exploração educacional e não executa consultas em um banco de dados de produção real.
                 </p>
             </header>
 
@@ -99,20 +99,20 @@ export function UploadSection({ onSchemaReady, onNavigateToSchema }: UploadSecti
                         <div className="w-12 h-12 bg-muted rounded-lg border border-border flex items-center justify-center mx-auto mb-4">
                             <Loader2 className="text-blue-500 animate-spin" size={24} />
                         </div>
-                        <h3 className="text-sm font-medium text-foreground mb-1">Processando arquivo...</h3>
-                        <p className="text-xs text-muted-foreground mb-6">Gerando embeddings e indexando dados</p>
+                        <h3 className="text-base font-medium text-foreground mb-1">Processando arquivo...</h3>
+                        <p className="text-base text-muted-foreground mb-6">Gerando embeddings e indexando dados</p>
                     </>
                 ) : (
                     <>
                         <div className="w-12 h-12 bg-muted rounded-lg border border-border flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                             <FileText className="text-muted-foreground group-hover:text-foreground" size={24} />
                         </div>
-                        <h3 className="text-sm font-medium text-foreground mb-1">Upload CSV Dataset</h3>
-                        <p className="text-xs text-muted-foreground mb-6">Drag and drop or click to browse</p>
+                        <h3 className="text-base font-medium text-foreground mb-1">Upload do Conjunto de Dados CSV</h3>
+                        <p className="text-base text-muted-foreground mb-6">Arraste e solte ou clique para navegar</p>
 
                         <div className="flex items-center justify-center gap-2 text-base text-muted-foreground bg-muted py-2 px-3 rounded-full inline-flex border border-border">
                             <ShieldCheck size={14} />
-                            <span>Local processing validation enabled</span>
+                            <span>Validação de processamento local ativada</span>
                         </div>
                     </>
                 )}
@@ -120,7 +120,7 @@ export function UploadSection({ onSchemaReady, onNavigateToSchema }: UploadSecti
 
             {error && (
                 <div className="w-full mt-4 bg-red-500/10 border border-red-500/20 rounded-lg p-4 fade-in">
-                    <p className="text-sm text-red-500 font-medium">{error}</p>
+                    <p className="text-base text-red-500 font-medium">{error}</p>
                 </div>
             )}
 
@@ -144,9 +144,9 @@ export function UploadSection({ onSchemaReady, onNavigateToSchema }: UploadSecti
                             e.stopPropagation();
                             onNavigateToSchema();
                         }}
-                        className="flex items-center gap-2 text-xs font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                        className="flex items-center gap-2 text-base font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
                     >
-                        View Schema <ArrowRight size={12} />
+                        Visualizar Esquemas <ArrowRight size={12} />
                     </button>
                 </div>
             )}
