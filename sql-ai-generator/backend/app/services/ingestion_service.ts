@@ -18,14 +18,40 @@ export default class IngestionService {
   }
 
   /**
+   * Detecta o separador do CSV (; ou ,) analisando a primeira linha
+   */
+  private async detectSeparator(filePath: string): Promise<string> {
+    const firstLine = await new Promise<string>((resolve, reject) => {
+      const stream = fs.createReadStream(filePath)
+      let buffer = ''
+      stream.on('data', (chunk) => {
+        buffer += chunk.toString()
+        const newlineIndex = buffer.indexOf('\n')
+        if (newlineIndex !== -1) {
+          resolve(buffer.slice(0, newlineIndex))
+          stream.destroy()
+        }
+      })
+      stream.on('end', () => resolve(buffer.split('\n')[0] || buffer))
+      stream.on('error', reject)
+    })
+    const separator = firstLine.includes(';') ? ';' : ','
+    console.log(`📌 Delimitador detectado: "${separator}"`)
+    return separator
+  }
+
+  /**
    * Processa um arquivo CSV e armazena metadados com embeddings
    */
   async processCSV(filePath: string, fileName?: string) {
     console.log('🚀 Iniciando processamento do CSV:', fileName)
 
+    // Detectar separador automaticamente (suporta ; e ,)
+    const separator = await this.detectSeparator(filePath)
+
     // Ler o cabeçalho do CSV para obter nomes e tipos de colunas
     console.log('📝 Extraindo colunas do CSV...')
-    const columns = await this.extractColumnsFromCSV(filePath)
+    const columns = await this.extractColumnsFromCSV(filePath, separator)
     console.log(`✅ Encontradas ${columns.length} colunas:`, columns.map(c => c.name).join(', '))
 
     const tableName = fileName
@@ -36,7 +62,7 @@ export default class IngestionService {
 
     // IMPORTANTE: Criar tabela física com os dados do CSV
     console.log('🏗️ Criando tabela física no banco de dados...')
-    const rowCount = await this.createPhysicalTable(filePath, tableName, columns)
+    const rowCount = await this.createPhysicalTable(filePath, tableName, columns, separator)
     console.log(`✅ Tabela criada com ${rowCount} linhas importadas`)
 
     // Para cada coluna, gerar embedding e salvar no vetor
@@ -92,13 +118,13 @@ export default class IngestionService {
   /**
    * Extrai colunas de um arquivo CSV
    */
-  private async extractColumnsFromCSV(filePath: string): Promise<Array<{ name: string, type?: string }>> {
+  private async extractColumnsFromCSV(filePath: string, separator: string = ','): Promise<Array<{ name: string, type?: string }>> {
     return new Promise((resolve, reject) => {
       const columns: Array<{ name: string, type?: string }> = []
       let resolved = false
 
       const stream = fs.createReadStream(filePath)
-        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
+        .pipe(csvParser({ separator }))
         .on('data', (row) => {
           if (!resolved) {
             // Pega os nomes das colunas (keys do primeiro objeto)
@@ -126,12 +152,13 @@ export default class IngestionService {
   private async createPhysicalTable(
     filePath: string,
     tableName: string,
-    columns: Array<{ name: string, type?: string }>
+    columns: Array<{ name: string, type?: string }>,
+    separator: string = ','
   ): Promise<number> {
     const db = (await import('@adonisjs/lucid/services/db')).default
 
     // Inferir tipos de dados analisando os dados
-    const columnsWithTypes = await this.inferColumnTypes(filePath, columns)
+    const columnsWithTypes = await this.inferColumnTypes(filePath, columns, separator)
 
     // Criar a definição da tabela
     const columnDefinitions = columnsWithTypes
@@ -151,7 +178,7 @@ export default class IngestionService {
     console.log('    📥 Lendo dados do CSV...')
     await new Promise<void>((resolve, reject) => {
       fs.createReadStream(filePath)
-        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
+        .pipe(csvParser({ separator }))
         .on('data', (row) => {
           rows.push(row)
         })
@@ -207,7 +234,8 @@ export default class IngestionService {
    */
   private async inferColumnTypes(
     filePath: string,
-    columns: Array<{ name: string, type?: string }>
+    columns: Array<{ name: string, type?: string }>,
+    separator: string = ','
   ): Promise<Array<{ name: string, type: string }>> {
     const sampleRows: any[] = []
     const sampleSize = 100
@@ -215,7 +243,7 @@ export default class IngestionService {
     await new Promise<void>((resolve, reject) => {
       let count = 0
       fs.createReadStream(filePath)
-        .pipe(csvParser())  // Usar vírgula como delimitador (padrão)
+        .pipe(csvParser({ separator }))
         .on('data', (row) => {
           if (count < sampleSize) {
             sampleRows.push(row)
