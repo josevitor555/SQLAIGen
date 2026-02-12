@@ -23,6 +23,7 @@ router.group(() => {
   // Rotas de Pergunta (Gatilho de IA)
   router.post('/queries/ask', [QueriesController, 'ask'])
   router.post('/queries/execute', [QueriesController, 'execute'])
+  router.post('/chat/analyze', [QueriesController, 'chat'])
 }).prefix('/api')
 
 // Rota sem prefixo /api (para compatibilidade com frontend atual)
@@ -31,4 +32,5 @@ router.get('/schemas/latest', [SchemasController, 'show'])
 router.delete('/schemas/latest', [SchemasController, 'destroy'])
 router.post('/queries/ask', [QueriesController, 'ask'])
 router.post('/queries/execute', [QueriesController, 'execute'])
+router.post('/chat/analyze', [QueriesController, 'chat'])
 

@@ -84,18 +84,19 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
 
     const getTypeBadgeColor = (type: string) => {
         const upperType = type.toUpperCase();
-        if (upperType.includes('INT')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-        if (upperType.includes('VARCHAR') || upperType.includes('TEXT')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-        if (upperType.includes('FLOAT') || upperType.includes('NUMERIC') || upperType.includes('DECIMAL')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-        if (upperType.includes('DATE') || upperType.includes('TIMESTAMP')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+        // Paleta sutil que funciona bem em ambos temas
+        if (upperType.includes('INT')) return 'bg-purple-500/10 text-purple-500 border-purple-500/30';
+        if (upperType.includes('VARCHAR') || upperType.includes('TEXT')) return 'bg-blue-500/10 text-blue-500 border-blue-500/30';
+        if (upperType.includes('FLOAT') || upperType.includes('NUMERIC') || upperType.includes('DECIMAL')) return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+        if (upperType.includes('DATE') || upperType.includes('TIMESTAMP')) return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
+        return 'bg-muted/40 text-muted-foreground border-border';
     };
 
     if (isLoading) {
         return (
             <div className="max-w-4xl mx-auto py-12 px-6 h-full flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <Loader2 size={32} className="text-white/20 animate-spin" />
+                    <Loader2 size={32} className="text-muted-foreground/40 animate-spin" />
                     <span className="text-base text-foreground font-medium">Carregando esquemas...</span>
                 </div>
             </div>
@@ -123,7 +124,7 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="text-base text-muted-foreground bg-white/5 px-2.5 py-1 rounded-full border border-white/10 tracking-wider">
+                    <div className="text-base text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-subtle tracking-wider">
                         {schema.originalName}
                     </div>
                     <button
@@ -141,19 +142,19 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
                 </div>
             </header>
 
-            <div className="border border-white/10 rounded-xl overflow-hidden bg-[#1a1a1a] shadow-2xl">
+            <div className="border border-subtle rounded-xl overflow-hidden bg-card shadow-elevated">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="border-b border-white/10 bg-white/2">
+                        <tr className="border-b border-subtle bg-muted/40">
                             <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Nome da Coluna</th>
                             <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Tipo Inferido</th>
                             <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Valor de Exemplo</th>
-                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Descrição</th>
+                            <th className="py-4 px-4 text-xs font-semibold text-muted-foreground uppercase">Descrição (IA)</th>
                         </tr>
                     </thead>
-                    <tbody className="text-sm divide-y divide-white/5">
+                    <tbody className="text-sm bg-muted/40 divide-y divide-border">
                         {schema.columns.map((column, idx) => (
-                            <tr key={idx} className="group hover:bg-white/2 transition-colors">
+                            <tr key={idx} className="group hover:bg-accent/40 transition-colors">
                                 <td className="py-4 px-4 text-base text-muted-foreground">{column.name}</td>
                                 <td className="py-4 px-4">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getTypeBadgeColor(column.type)}`}>

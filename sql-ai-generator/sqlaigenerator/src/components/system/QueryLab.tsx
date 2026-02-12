@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Database, Wand2, Loader2, Copy, ShieldAlert, Search } from 'lucide-react';
 
+// Syntax highlighting for SQL
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
 interface QueryProps {
     onAddToHistory: (query: string, sql: string, timestamp: string) => void;
     currentDataset: string;
@@ -69,7 +73,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
             </header>
 
             {/* Input Area */}
-            <div className="bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 ring-4 ring-transparent focus-within:ring-white/5 focus-within:border-white/20 transition-all">
+            <div className="bg-muted rounded-xl border border-subtle ring-4 ring-transparent focus-within:ring-ring/40 focus-within:border-ring transition-all">
                 <textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -77,7 +81,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                     className="w-full resize-none border-none bg-transparent p-4 text-base text-muted-foreground placeholder:text-muted-foreground focus:outline-none"
                     placeholder="ex: Mostre-me os 5 melhores alunos com o maior GPA matriculados em CS-101..."
                 />
-                <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-white/5">
+                <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-subtle">
                     <div className="text-base text-muted-foreground flex items-center gap-1.5">
                         <Database size={14} />
                         Contexto: <span className="text-muted-foreground">{currentDataset}</span>
@@ -97,8 +101,8 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
             {isLoading && (
                 <div className="py-12 flex justify-center">
                     <div className="flex flex-col items-center gap-3">
-                        <Loader2 size={32} className="text-white/20 animate-spin" />
-                        <span className="text-base text-white/40 font-medium">Analisando relacionamentos do esquema...</span>
+                        <Loader2 size={32} className="text-muted-foreground/40 animate-spin" />
+                        <span className="text-base text-muted-foreground font-medium">Analisando relacionamentos do esquema...</span>
                     </div>
                 </div>
             )}
@@ -109,14 +113,14 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                     <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-base font-medium text-muted-foreground">Consulta Gerada</h3>
                         <div className="flex gap-2">
-                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">SOMENTE LEITURA</span>
-                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">DIALETO POSTGRESQL</span>
+                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">Somente Leitura</span>
+                            <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">Diealeto PostgreSQL</span>
                         </div>
                     </div>
 
                     <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-linear-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                        <div className="relative rounded-xl bg-[#0a0a0a] overflow-hidden shadow-2xl border border-white/10">
+                        <div className="absolute -inset-0.5 rounded-xl group-hover:opacity-40"></div>
+                        <div className="relative rounded-xl bg-muted overflow-hidden border border-white/10">
                             <div className="flex items-center justify-between px-4 py-2.5 bg-muted/10 border-b border-subtle">
                                 <div className="flex gap-1.5">
                                     <div className="w-2.5 h-2.5 rounded-full bg-muted/60"></div>
@@ -124,16 +128,27 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                                     <div className="w-2.5 h-2.5 rounded-full bg-muted/20"></div>
                                 </div>
                                 <button
-                                    className="text-subtle hover:text-foreground transition-colors"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
                                     onClick={() => navigator.clipboard.writeText(result.sql)}
                                 >
                                     <Copy size={14} />
                                 </button>
                             </div>
                             <div className="p-6 overflow-x-auto">
-                                <pre className="font-mono text-base leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                                <SyntaxHighlighter
+                                    language="sql"
+                                    style={atomOneDark}
+                                    customStyle={{
+                                        margin: 0,
+                                        padding: '1.5rem',
+                                        fontSize: '14px',
+                                        background: 'transparent',
+                                    }}
+                                    showLineNumbers={false}
+                                    wrapLongLines
+                                >
                                     {result.sql}
-                                </pre>
+                                </SyntaxHighlighter>
                             </div>
                         </div>
                     </div>

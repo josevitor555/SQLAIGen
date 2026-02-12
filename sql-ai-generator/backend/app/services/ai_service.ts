@@ -25,6 +25,51 @@ export default class AiService {
   }
 
   /**
+   * Analisa o dataset com base na pergunta do usuário - Modo Conversa
+   * Não gera SQL, apenas analisa estrutura, colunas, relacionamentos e fornece insights
+   */
+  async analyzeDataset(question: string): Promise<string> {
+    const questionEmbedding = await this.generateEmbedding(question)
+    const relevantColumns = await this.vectorService.findRelevantColumns(question, questionEmbedding, 15)
+
+    const schemaInfo = relevantColumns.map((col: ColumnMetadata) =>
+      `Tabela: ${col.tableName}, Coluna: ${col.columnName}, Tipo: ${col.dataType}, Descrição: ${col.description}`
+    ).join('\n')
+
+    const systemPrompt = `Você é o "SG-AI", um assistente de análise de dados inteligente, amigável e perspicaz. Seu objetivo é ajudar o usuário a extrair o máximo de valor do dataset, conversando de forma natural, como um colega de equipe sênior faria.
+
+CONTEXTO DO DATASET (O que você "enxerga"):
+${schemaInfo}
+
+DIRETRIZES DE PERSONALIDADE E ESTILO (CHATGPT-LIKE):
+- **Tom de Voz**: Use um tom profissional, porém acessível e entusiasmado. Seja proativo e não apenas reativo.
+- **Saudações e Fluidez**: Não precisa ser excessivamente formal. Pode usar expressões como "Olhando aqui os seus dados...", "Uma coisa interessante que notei é..." ou "Fazendo uma leitura rápida, vejo que...".
+- **Sem Listas Secas**: Em vez de apenas listar pontos, conecte as ideias. Use bullet points apenas para organizar sugestões, mas introduza-os com uma breve análise.
+- **Insights Contextuais**: Use o conhecimento técnico para sugerir *por que* certa coluna é importante. (Ex: "A coluna 'required' é crucial porque ela separa o que é crítico do que é opcional no seu projeto").
+- **Emojis**: Use emojis de forma sutil para dar leveza à conversa (ex: 📊, 💡, ✅, 🚀).
+- **Zero SQL**: Nunca mostre código SQL aqui. Fale sobre a *lógica* do negócio e dos dados.
+
+ESTRUTURA DA RESPOSTA:
+1. Comece com uma frase de reconhecimento sobre o que o usuário perguntou ou sobre o estado geral do dataset.
+2. Desenvolva a análise misturando observações técnicas com insights práticos.
+3. Termine sempre com uma pergunta aberta ou uma sugestão instigante para manter o engajamento.`
+
+    const prompt = `${systemPrompt}
+
+PERGUNTA DO USUÁRIO: ${question}
+
+Responda com sua análise:`
+
+    try {
+      const response = await this.mistralClient.invoke(prompt)
+      return response.content.toString().trim()
+    } catch (error) {
+      console.error('Erro ao analisar dataset:', error)
+      throw new Error(`Falha ao analisar o dataset: ${(error as Error).message}`)
+    }
+  }
+
+  /**
    * Gera uma consulta SQL com base na pergunta do usuário e nos metadados relevantes
    */
   async generateSQL(question: string): Promise<string> {
@@ -91,6 +136,13 @@ Regras adicionais:
 - Não inclua ";" no final da consulta
 - Se não for possível gerar uma consulta válida com as tabelas fornecidas, responda com "Nenhuma consulta pode ser gerada com as tabelas disponíveis"
 
+REGRAS DE UNICIDADE E ESTRUTURA:
+- Gere EXATAMENTE UMA única consulta SQL.
+- NUNCA retorne mais de um comando SELECT na mesma resposta.
+- Se a pergunta exigir múltiplas visões, tente consolidar em uma única query usando JOINs, CTEs (WITH) ou UNION ALL.
+- NÃO repita o comando SELECT no meio da resposta.
+- A consulta deve ser autossuficiente e responder à pergunta de forma direta.
+
 FORMATO DE SAÍDA ESPERADO:
 Sua resposta deve começar IMEDIATAMENTE com SELECT (sem espaços ou caracteres antes).
 Exemplo: SELECT c."Country", SUM(...) FROM "tabela" c GROUP BY c."Country"`
@@ -118,6 +170,13 @@ Exemplo: SELECT c."Country", SUM(...) FROM "tabela" c GROUP BY c."Country"`
 
       // Normalizar espaços em branco
       sqlQuery = sqlQuery.replace(/\s+/g, ' ').trim()
+
+      // Se a IA gerou múltiplos SELECTs (erro comum), manter apenas o primeiro
+      const selectMatches = sqlQuery.match(/SELECT/gi) || []
+      if (selectMatches.length > 1) {
+        const parts = sqlQuery.split(/(?=SELECT)/i)
+        sqlQuery = parts[0].trim()
+      }
 
       // Garantir que começa com uma palavra-chave SQL válida
       if (!sqlQuery.match(/^(SELECT|WITH|INSERT|UPDATE|DELETE)/i)) {

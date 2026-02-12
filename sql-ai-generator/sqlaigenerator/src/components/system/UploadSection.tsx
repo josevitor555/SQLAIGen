@@ -146,7 +146,7 @@ export function UploadSection({ onSchemaReady, onNavigateToSchema }: UploadSecti
                         }}
                         className="flex items-center gap-2 text-base font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
                     >
-                        Visualizar Esquemas <ArrowRight size={12} />
+                        Visualizar Tabela <ArrowRight size={12} />
                     </button>
                 </div>
             )}

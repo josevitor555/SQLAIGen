@@ -1,9 +1,9 @@
-import { Upload, Database, Terminal, History, User, Sun, Moon } from 'lucide-react';
+import { Upload, Database, Terminal, History, MessageCircle, User, Sun, Moon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
-    activeTab: 'upload' | 'schema' | 'query' | 'history';
-    onTabChange: (tab: 'upload' | 'schema' | 'query' | 'history') => void;
+    activeTab: 'upload' | 'schema' | 'query' | 'history' | 'chat';
+    onTabChange: (tab: 'upload' | 'schema' | 'query' | 'history' | 'chat') => void;
     className?: string;
 }
 
@@ -35,6 +35,7 @@ export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }
         { id: 'upload', label: 'Fonte de Dados', icon: Upload },
         { id: 'schema', label: 'Esquema Semântico', icon: Database },
         { id: 'query', label: 'Laboratório de Consultas', icon: Terminal },
+        { id: 'chat', label: 'Modo Conversa', icon: MessageCircle },
         { id: 'history', label: 'Histórico', icon: History },
     ] as const;
 

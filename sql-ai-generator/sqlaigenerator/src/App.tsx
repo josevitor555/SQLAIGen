@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import { Sidebar } from './components/system/Sidebar';
 import { MobileHeader } from './components/system/MobileHeader';
@@ -6,14 +6,27 @@ import { UploadSection } from './components/system/UploadSection';
 import { SchemaViewer } from './components/system/SchemaViewer';
 import { QueryLab } from './components/system/QueryLab';
 import { HistoryLog, type HistoryItem } from './components/system/HistoryLog';
+import { ModalCredits } from './components/system/ModalCredits';
+import { ChatMode } from './components/pages/ChatMode';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'schema' | 'query' | 'history'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'schema' | 'query' | 'history' | 'chat'>('upload');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [currentDataset, setCurrentDataset] = useState<string>('Nenhum conjunto de dados carregado');
+  const [showCredits, setShowCredits] = useState(false);
 
-  const handleTabChange = (tab: 'upload' | 'schema' | 'query' | 'history') => {
+  // Exibe o modal de créditos uma vez na primeira renderização,
+  // com um pequeno atraso para não quebrar a experiência inicial.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowCredits(true);
+    }, 1200);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const handleTabChange = (tab: 'upload' | 'schema' | 'query' | 'history' | 'chat') => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
   };
@@ -83,7 +96,13 @@ function App() {
           {activeTab === 'history' && (
             <HistoryLog history={history} onClearHistory={clearHistory} />
           )}
+          {activeTab === 'chat' && (
+            <ChatMode currentDataset={currentDataset} />
+          )}
         </main>
+
+        {/* Modal de Créditos Finais */}
+        <ModalCredits isOpen={showCredits} onClose={() => setShowCredits(false)} />
 
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (

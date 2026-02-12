@@ -42,6 +42,33 @@ export default class QueriesController {
   }
 
   /**
+   * Modo Conversa: analisa o dataset em vez de gerar SQL
+   */
+  async chat({ request, response }: HttpContext) {
+    const validator = vine.compile(
+      vine.object({
+        question: vine.string().minLength(3).maxLength(1000)
+      })
+    )
+
+    try {
+      const payload = await validator.validate(request.all())
+      const analysis = await this.aiService.analyzeDataset(payload.question)
+
+      return {
+        question: payload.question,
+        response: analysis
+      }
+    } catch (error) {
+      console.error('Erro no Modo Conversa:', error)
+      return response.status(500).json({
+        error: 'Falha ao analisar o dataset',
+        message: (error as Error).message
+      })
+    }
+  }
+
+  /**
    * Executa uma query SQL gerada
    */
   async execute({ request, response }: HttpContext) {
