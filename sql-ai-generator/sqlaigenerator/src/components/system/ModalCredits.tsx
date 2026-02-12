@@ -46,7 +46,7 @@ export function ModalCredits({ isOpen, onClose }: ModalCreditsProps) {
           </li>
           <li className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <span>Kleyvison</span>
+            <span>Kleyvison Thomas Lima da Silva</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
