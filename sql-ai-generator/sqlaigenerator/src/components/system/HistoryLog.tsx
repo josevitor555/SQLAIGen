@@ -18,7 +18,7 @@ export function HistoryLog({ history, onClearHistory }: HistoryLogProps) {
         <div className="max-w-4xl mx-auto py-12 px-6 fade-in h-full overflow-auto text-foreground">
             <header className="mb-8 flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-medium text-white mb-2">Histórico de Interações</h1>
+                    <h1 className="text-2xl font-medium text-foreground mb-2">Histórico de Interações</h1>
                     <p className="text-base text-muted-foreground">
                         Log de auditoria das consultas geradas. Edição ou reexecução estão desabilitadas.
                     </p>
@@ -37,7 +37,7 @@ export function HistoryLog({ history, onClearHistory }: HistoryLogProps) {
                     <div className="text-center text-muted-foreground py-16">
                         <div className="bg-muted/10 rounded-xl p-8 border border-subtle inline-block">
                             <p className="text-base mb-2">Nenhuma consulta ainda</p>
-                            <p className="text-base text-white/40">
+                            <p className="text-base text-foreground">
                                 Comece a fazer perguntas no Laboratório de Consultas para ver o histórico aqui.
                             </p>
                         </div>

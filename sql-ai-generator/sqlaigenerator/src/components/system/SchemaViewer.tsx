@@ -96,7 +96,7 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
             <div className="max-w-4xl mx-auto py-12 px-6 h-full flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 size={32} className="text-white/20 animate-spin" />
-                    <span className="text-base text-white/40 font-medium">Carregando schema...</span>
+                    <span className="text-base text-foreground font-medium">Carregando esquemas...</span>
                 </div>
             </div>
         );
@@ -104,10 +104,10 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
 
     if (error || !schema) {
         return (
-            <div className="max-w-4xl mx-auto py-12 px-6 h-full flex items-center justify-center">
+            <div className="bg-muted max-w-4xl mx-auto mt-92 py-12 px-6 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-red-500 mb-4">{error || 'Schema não encontrado'}</p>
-                    <p className="text-muted-foreground text-sm">Faça upload de um CSV primeiro.</p>
+                    <p className="text-red-500 mb-4">{error || 'Esquema não encontrado'}</p>
+                    <p className="text-muted-foreground text-base">Faça upload de um CSV primeiro.</p>
                 </div>
             </div>
         );
@@ -117,7 +117,7 @@ export function SchemaViewer({ onNavigateToQuery, onDeleteDataset }: SchemaViewe
         <div className="max-w-6xl mx-auto py-12 px-6 fade-in h-full overflow-auto">
             <header className="flex items-end justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Contexto Semântico</h1>
+                    <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2">Contexto Semântico</h1>
                     <p className="text-base text-muted-foreground">
                         A IA utiliza este esquema inferido para mapear linguagem natural para lógica SQL. Verifique os tipos de dados abaixo.
                     </p>

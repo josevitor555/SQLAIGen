@@ -62,7 +62,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
     return (
         <div className="max-w-4xl mx-auto py-12 px-6 fade-in h-full overflow-auto">
             <header className="mb-8">
-                <h1 className="text-2xl font-medium tracking-tight text-white mb-2">Linguagem Natural para SQL</h1>
+                <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2">Linguagem Natural para SQL</h1>
                 <p className="text-base text-muted-foreground max-w-2xl">
                     Faça perguntas sobre seus dados. O sistema gera instruções <span className="font-mono text-xs bg-muted/20 text-foreground px-1.5 py-0.5 rounded">SELECT</span> baseadas estritamente na estrutura CSV fornecida.
                     {/* <span className="bg-muted p-4 rounded-full block mt-4 text-amber-500/90 text-base flex items-center gap-1.5">
@@ -78,7 +78,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     rows={3}
-                    className="w-full resize-none border-none bg-transparent p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    className="w-full resize-none border-none bg-transparent p-4 text-base text-muted-foreground placeholder:text-muted-foreground focus:outline-none"
                     placeholder="ex: Mostre-me os 5 melhores alunos com o maior GPA matriculados em CS-101..."
                 />
                 <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-white/5">
@@ -111,7 +111,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
             {result && result.success && (
                 <div className="mt-10 fade-in">
                     <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-base font-medium text-foreground">Consulta Gerada</h3>
+                        <h3 className="text-base font-medium text-muted-foreground">Consulta Gerada</h3>
                         <div className="flex gap-2">
                             <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">SOMENTE LEITURA</span>
                             <span className="text-base bg-muted/10 px-2 py-1 rounded border border-subtle">DIALETO POSTGRESQL</span>
@@ -123,8 +123,8 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                         <div className="relative rounded-xl bg-[#0a0a0a] overflow-hidden shadow-2xl border border-white/10">
                             <div className="flex items-center justify-between px-4 py-2.5 bg-muted/10 border-b border-subtle">
                                 <div className="flex gap-1.5">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-muted/20"></div>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-muted/20"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-muted/60"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-muted/40"></div>
                                     <div className="w-2.5 h-2.5 rounded-full bg-muted/20"></div>
                                 </div>
                                 <button
@@ -135,7 +135,7 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                                 </button>
                             </div>
                             <div className="p-6 overflow-x-auto">
-                                <pre className="font-mono text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                                <pre className="font-mono text-base leading-relaxed text-muted-foreground whitespace-pre-wrap">
                                     {result.sql}
                                 </pre>
                             </div>
