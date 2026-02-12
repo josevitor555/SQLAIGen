@@ -65,10 +65,6 @@ export function QueryLab({ onAddToHistory, currentDataset }: QueryProps) {
                 <h1 className="text-2xl font-medium tracking-tight text-foreground mb-2">Linguagem Natural para SQL</h1>
                 <p className="text-base text-muted-foreground max-w-2xl">
                     Faça perguntas sobre seus dados. O sistema gera instruções <span className="font-mono text-xs bg-muted/20 text-foreground px-1.5 py-0.5 rounded">SELECT</span> baseadas estritamente na estrutura CSV fornecida.
-                    {/* <span className="bg-muted p-4 rounded-full block mt-4 text-amber-500/90 text-base flex items-center gap-1.5">
-                        <Info size={14} />
-                        Generated queries are for educational review and are not executed.
-                    </span> */}
                 </p>
             </header>
 
