@@ -60,6 +60,8 @@ O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso pe
 
 O dataset **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)** do Kaggle contém informações sobre modelos de IA (nome, provedor, parâmetros, janela de contexto, benchmarks etc.). Após fazer o download do CSV e carregá-lo no SQLAIGen pela **Fonte de Dados**, você pode usar o Morgan e o Laboratório de Consultas da seguinte forma.
 
+---
+
 ### Exemplo 1: “Qual modelo de IA tem maior janela de contexto?”
 
 - **Modo Conversa (Morgan):** O Morgan usa o esquema semântico e as estatísticas do dataset (por exemplo, colunas como “context window” ou “context_length”) para identificar o modelo com maior janela de contexto. A resposta é em linguagem natural, citando o nome do modelo e o valor quando disponível, e pode sugerir refinamentos ou perguntas complementares.
