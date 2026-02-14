@@ -1,4 +1,4 @@
-# SQLAIGen
+### SQLAIGen
 
 Sistema de **geração de SQL e análise de dados em linguagem natural**, com um assistente conversacional (Morgan) que interpreta perguntas sobre conjuntos de dados, retorna consultas SQL e insights baseados na estrutura e no conteúdo dos dados.
 
