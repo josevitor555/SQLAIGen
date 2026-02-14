@@ -49,6 +49,14 @@ O Morgan segue regras rígidas: não inventa rankings a partir de amostras; dist
 
 ---
 
+## Imagens do Morgan
+
+O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso personagem fictício que guia os usuários no **Modo Conversa** e dá vida às análises em linguagem natural.
+
+![Morgan](sql-ai-generator\sqlaigenerator\public\morgan.png)
+
+---
+
 ## Exemplos de uso com o dataset “AI Models Benchmark 2026” (Kaggle)
 
 O dataset **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)** do Kaggle contém informações sobre modelos de IA (nome, provedor, parâmetros, janela de contexto, benchmarks etc.). Após fazer o download do CSV e carregá-lo no SQLAIGen pela **Fonte de Dados**, você pode usar o Morgan e o Laboratório de Consultas da seguinte forma.
