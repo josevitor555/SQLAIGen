@@ -59,7 +59,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
           );
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [identifier]);
 
   const sendMessage = async () => {
@@ -128,7 +128,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
           Modo Conversa
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl">
-          Converse com o agente de IA sobre seu conjunto de dados. O assistente analisa a estrutura, colunas e relacionamentos — sem gerar SQL.
+          Converse com o Morgan, seu analista de dados sênior da The Boring Interprise, ele analisa sobre seu conjunto de dados. O assistente analisa a estrutura, colunas e relacionamentos.
         </p>
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Database size={14} />
@@ -177,16 +177,14 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
                   )}
                 </div>
                 <div
-                  className={`flex-1 max-w-[85%] flex flex-col ${
-                    msg.role === 'user' ? 'items-end' : 'items-start'
-                  }`}
+                  className={`flex-1 max-w-[85%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'
+                    }`}
                 >
                   <div
-                    className={`inline-block rounded-xl px-4 py-3 ${
-                      msg.role === 'user'
+                    className={`inline-block rounded-xl px-4 py-3 ${msg.role === 'user'
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-muted border border-subtle text-foreground'
-                    }`}
+                      }`}
                   >
                     <div className="text-base break-words text-left prose prose-sm dark:prose-invert max-w-none [&_*]:text-inherit [&_*]:m-0 [&_ul]:my-2 [&_ol]:my-2 [&_p]:my-1.5 [&_p:first]:mt-0 [&_p:last]:mb-0">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
