@@ -57,4 +57,3 @@ export function ModalCredits({ isOpen, onClose }: ModalCreditsProps) {
     </div>
   );
 }
-

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Send, Loader2, User, Bot, Database } from 'lucide-react';
 
 export interface ChatMessage {
@@ -14,11 +15,22 @@ interface ChatModeProps {
 }
 
 const API_URL = 'http://localhost:3333';
+const CHAT_IDENTIFIER_KEY = 'chat_identifier';
+
+function getOrCreateIdentifier(): string {
+  let id = localStorage.getItem(CHAT_IDENTIFIER_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(CHAT_IDENTIFIER_KEY, id);
+  }
+  return id;
+}
 
 export function ChatMode({ currentDataset }: ChatModeProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [identifier] = useState(() => getOrCreateIdentifier());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -28,6 +40,27 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Carregar histórico ao montar (últimas 10 mensagens do identifier)
+  useEffect(() => {
+    if (!identifier) return;
+    fetch(`${API_URL}/chat/history?identifier=${encodeURIComponent(identifier)}&limit=10`)
+      .then((res) => res.ok ? res.json() : { messages: [] })
+      .then((data) => {
+        const list = (data.messages ?? []) as { id: number; role: 'user' | 'assistant'; content: string; createdAt: string }[];
+        if (list.length > 0) {
+          setMessages(
+            list.map((m) => ({
+              id: `${m.role}-${m.id}`,
+              role: m.role,
+              content: m.content,
+              timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [identifier]);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
@@ -47,7 +80,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
       const res = await fetch(`${API_URL}/chat/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: trimmed }),
+        body: JSON.stringify({ question: trimmed, identifier }),
       });
 
       const data = await res.json();
@@ -155,9 +188,9 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
                         : 'bg-muted border border-subtle text-foreground'
                     }`}
                   >
-                    <p className="text-base whitespace-pre-wrap break-words text-left">
-                      {msg.content}
-                    </p>
+                    <div className="text-base break-words text-left prose prose-sm dark:prose-invert max-w-none [&_*]:text-inherit [&_*]:m-0 [&_ul]:my-2 [&_ol]:my-2 [&_p]:my-1.5 [&_p:first]:mt-0 [&_p:last]:mb-0">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                     {msg.error && (
                       <div className="mt-3 status-error rounded-lg px-3 py-2 text-sm">
                         {msg.error}

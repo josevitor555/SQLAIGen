@@ -1,7 +1,10 @@
 import { inject } from '@adonisjs/core'
+import db from '@adonisjs/lucid/services/db'
 import VectorService from './vector_service.js'
 import { ChatMistralAI } from '@langchain/mistralai'
 import { MistralAIEmbeddings } from '@langchain/mistralai'
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+import ChatHistory from '#models/chat_history'
 
 interface ColumnMetadata {
   id: number
@@ -25,42 +28,149 @@ export default class AiService {
   }
 
   /**
-   * Analisa o dataset com base na pergunta do usuário - Modo Conversa
-   * Não gera SQL, apenas analisa estrutura, colunas, relacionamentos e fornece insights
+   * Busca estatísticas reais da tabela (row_count, amostra, top valores) para dar "olhos" à IA
    */
-  async analyzeDataset(question: string): Promise<string> {
+  private async fetchTableStatistics(tableName: string): Promise<{
+    rowCount: number
+    sampleData: string
+    columnStats: Record<string, Record<string, number>> | null
+  }> {
+    const safeTableName = tableName.replace(/[^a-z0-9_]/g, '') // Sanitizar para evitar SQL injection
+    if (!safeTableName) return { rowCount: 0, sampleData: '', columnStats: null }
+
+    let rowCount = 0
+    let sampleData = ''
+    let columnStats: Record<string, Record<string, number>> | null = null
+
+    try {
+      // 1. Buscar dataset (row_count + column_stats)
+      const dataset = await db.from('datasets')
+        .where('internal_table_name', safeTableName)
+        .select('row_count', 'column_stats')
+        .first()
+
+      if (dataset) {
+        if (dataset.row_count !== undefined && dataset.row_count !== null) {
+          rowCount = Number(dataset.row_count)
+        }
+        columnStats = (dataset.column_stats as Record<string, Record<string, number>>) ?? null
+      }
+
+      // 2. Se não encontrou row_count no datasets, buscar COUNT(*) direto na tabela
+      if (rowCount === 0) {
+        const countResult = await db.rawQuery(`SELECT COUNT(*) AS total FROM "${safeTableName}"`)
+        rowCount = Number((countResult.rows?.[0] as { total: string })?.total ?? 0)
+      }
+
+      // 3. Buscar amostra (5 linhas) para a IA citar nomes e exemplos reais
+      const sampleResult = await db.rawQuery(`SELECT * FROM "${safeTableName}" LIMIT 5`)
+      sampleData = JSON.stringify(sampleResult.rows || [], null, 0)
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas da tabela:', error)
+    }
+
+    return { rowCount, sampleData, columnStats }
+  }
+
+  /**
+   * Monta o system prompt do Morgan (contexto de esquema + dados reais). Usado tanto em prompt único quanto em chat com histórico.
+   */
+  private async buildAnalyzeSystemPrompt(question: string): Promise<string> {
     const questionEmbedding = await this.generateEmbedding(question)
     const relevantColumns = await this.vectorService.findRelevantColumns(question, questionEmbedding, 15)
+    const tableName = relevantColumns[0]?.tableName ?? ''
+    const { rowCount, sampleData, columnStats } = await this.fetchTableStatistics(tableName)
 
     const schemaInfo = relevantColumns.map((col: ColumnMetadata) =>
       `Tabela: ${col.tableName}, Coluna: ${col.columnName}, Tipo: ${col.dataType}, Descrição: ${col.description}`
     ).join('\n')
 
-    const systemPrompt = `Você é o "SG-AI", um assistente de análise de dados inteligente, amigável e perspicaz. Seu objetivo é ajudar o usuário a extrair o máximo de valor do dataset, conversando de forma natural, como um colega de equipe sênior faria.
+    const statsDescription = columnStats && Object.keys(columnStats).length > 0
+      ? Object.entries(columnStats)
+          .map(([col, values]) => {
+            const isSum = col.includes('_sum_by_')
+            const label = isSum ? 'SOMA' : 'FREQUÊNCIA (quantidade de registros)'
+            const vals = Object.entries(values as Record<string, number>)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(', ')
+            return `Agregação [${label}] na coluna ${col}: [${vals}]`
+          })
+          .join('\n')
+      : ''
+    const topValuesText = statsDescription ? `\n${statsDescription}\n` : ''
 
-CONTEXTO DO DATASET (O que você "enxerga"):
+    const realDataContext = tableName
+      ? `
+CONTEXTO REAL DOS DADOS:
+- Tabela: ${tableName} | Total de linhas: ${rowCount}
+- Amostra: ${sampleData}
+${topValuesText}
+
+INSTRUÇÕES DE ANÁLISE (O "OLHAR" DO MORGAN):
+1. **Identificação Direta**: Se o usuário perguntar por grupos específicos (ex: nobreza, crianças, tripulação), vasculhe a amostra de dados e os metadados em busca de nomes reais ou títulos que confirmem isso.
+2. **Citação de Exemplos**: Nunca diga apenas "existem títulos"; diga "identifiquei passageiros com títulos como 'Lady' ou 'Sir', como por exemplo [Citar Nome da Amostra se disponível]".
+3. **Cruzamento de Dados**: Se a pergunta for sobre aristocracia, use a lógica: Pclass = 1 + Títulos Específicos (Countess, Lady, Sir, Col, Major) + Fare Alto.
+4. **Tratamento de Nomes**: O Morgan deve "ler" os nomes na coluna 'Name'. Se encontrar "Rothes, the Countess of" ou "Duff Gordon, Sir Cosmo", ele deve apresentar isso como um achado valioso.
+5. **Proibição de Inferência Amostral (A Regra do Silêncio)**: Nunca use a "amostra" (sampleData) para concluir rankings ou totais. A amostra serve apenas para citar EXEMPLOS de nomes ou formatos. Para rankings de "quem vendeu mais" ou "quem sobreviveu mais", se o valor agregado não estiver nas columnStats (como uma estatística de SOMA), admita que não tem a soma exata e sugira ao usuário usar o Modo SQL.
+
+DIFERENÇA ENTRE FREQUÊNCIA E VALOR:
+- Se você vir algo como "David (222)" em uma agregação de FREQUÊNCIA, isso significa que David aparece 222 vezes nos registros (contagem).
+- NÃO assuma que ele é o maior em valor financeiro a menos que exista uma estatística explícita de SOMA (SUM) nas agregações acima.
+- Se a pergunta exigir uma conta (ex: "quem vendeu mais em valor?") que não estiver nas agregações (sem SOMA disponível), diga: "Consigo ver quem mais aparece nos registros (frequência), mas para saber o valor exato vendido, preciso processar uma query de soma. Quer que eu faça isso no Modo SQL?"
+6. **Dados Quantitativos**: Se o usuário perguntar "quantos?", "qual o total?", "tem mais X ou Y?", use os valores fornecidos nas agregações acima (FREQUÊNCIA ou SOMA conforme o caso). Não especule se você tiver o dado real.
+
+DIRETRIZES DE PERSONALIDADE:
+- Seja o analista que "garimpa" a informação. Use frases como: "Vasculhando aqui os registros de nomes, encontrei alguns títulos que confirmam..." ou "Olhando para os passageiros da primeira classe, alguns nomes saltam aos olhos, como...".
+- Mantenha o tom de conversa inteligente e proativo. ✨
+- **Zero SQL**: Nunca mostre código SQL aqui. Fale sobre a *lógica* do negócio e dos dados.`
+      : ''
+
+    return `Você é o "Morgan", um analista de dados sênior com olhar clínico para detalhes. Seu objetivo é extrair e apresentar fatos concretos do dataset, citando nomes e exemplos reais quando disponíveis.
+${realDataContext}
+
+CONTEXTO DO ESQUEMA (metadados das colunas):
 ${schemaInfo}
 
-DIRETRIZES DE PERSONALIDADE E ESTILO (CHATGPT-LIKE):
-- **Tom de Voz**: Use um tom profissional, porém acessível e entusiasmado. Seja proativo e não apenas reativo.
-- **Saudações e Fluidez**: Não precisa ser excessivamente formal. Pode usar expressões como "Olhando aqui os seus dados...", "Uma coisa interessante que notei é..." ou "Fazendo uma leitura rápida, vejo que...".
-- **Sem Listas Secas**: Em vez de apenas listar pontos, conecte as ideias. Use bullet points apenas para organizar sugestões, mas introduza-os com uma breve análise.
-- **Insights Contextuais**: Use o conhecimento técnico para sugerir *por que* certa coluna é importante. (Ex: "A coluna 'required' é crucial porque ela separa o que é crítico do que é opcional no seu projeto").
-- **Emojis**: Use emojis de forma sutil para dar leveza à conversa (ex: 📊, 💡, ✅, 🚀).
-- **Zero SQL**: Nunca mostre código SQL aqui. Fale sobre a *lógica* do negócio e dos dados.
-
 ESTRUTURA DA RESPOSTA:
-1. Comece com uma frase de reconhecimento sobre o que o usuário perguntou ou sobre o estado geral do dataset.
-2. Desenvolva a análise misturando observações técnicas com insights práticos.
-3. Termine sempre com uma pergunta aberta ou uma sugestão instigante para manter o engajamento.`
+1. Comece com uma frase de reconhecimento sobre o que o usuário perguntou.
+2. Apresente seus achados citando dados reais da amostra e das estatísticas (nomes, títulos, valores).
+3. Termine com uma pergunta aberta ou sugestão instigante para manter o engajamento.`
+  }
 
-    const prompt = `${systemPrompt}
+  /**
+   * Analisa o dataset com base na pergunta do usuário - Modo Conversa.
+   * Se identifier for informado: recupera histórico, envia contexto + nova pergunta para a IA e persiste user + assistant no banco.
+   */
+  async analyzeDataset(question: string, identifier?: string): Promise<string> {
+    const systemPrompt = await this.buildAnalyzeSystemPrompt(question)
+
+    try {
+      if (identifier) {
+        // 1. Recuperar: últimas mensagens do identifier
+        const historyRows = await ChatHistory.getLastMessages(identifier, 10)
+        // 2. Formatar: no padrão que a API da IA exige (HumanMessage / AIMessage)
+        const historyMessages = historyRows.map((row) =>
+          row.role === 'user' ? new HumanMessage(row.content) : new AIMessage(row.content)
+        )
+        const messages = [
+          new SystemMessage(systemPrompt),
+          ...historyMessages,
+          new HumanMessage(question),
+        ]
+        // 3. Enviar: histórico + nova pergunta para a IA
+        const response = await this.mistralClient.invoke(messages)
+        const responseText = response.content.toString().trim()
+        // 4. Salvar: nova pergunta do usuário e resposta da IA
+        await ChatHistory.create({ identifier, role: 'user', content: question })
+        await ChatHistory.create({ identifier, role: 'assistant', content: responseText })
+        return responseText
+      }
+
+      const prompt = `${systemPrompt}
 
 PERGUNTA DO USUÁRIO: ${question}
 
 Responda com sua análise:`
-
-    try {
       const response = await this.mistralClient.invoke(prompt)
       return response.content.toString().trim()
     } catch (error) {

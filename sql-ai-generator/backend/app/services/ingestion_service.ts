@@ -44,29 +44,29 @@ export default class IngestionService {
    * Processa um arquivo CSV e armazena metadados com embeddings
    */
   async processCSV(filePath: string, fileName?: string) {
-    console.log('🚀 Iniciando processamento do CSV:', fileName)
+    console.log('Iniciando processamento do CSV:', fileName)
 
     // Detectar separador automaticamente (suporta ; e ,)
     const separator = await this.detectSeparator(filePath)
 
     // Ler o cabeçalho do CSV para obter nomes e tipos de colunas
-    console.log('📝 Extraindo colunas do CSV...')
+    console.log('Extraindo colunas do CSV...')
     const columns = await this.extractColumnsFromCSV(filePath, separator)
-    console.log(`✅ Encontradas ${columns.length} colunas:`, columns.map(c => c.name).join(', '))
+    console.log(`Encontradas ${columns.length} colunas:`, columns.map(c => c.name).join(', '))
 
     const tableName = fileName
       ? fileName.toLowerCase().replace(/\.csv$/i, '').replace(/[^a-z0-9_]/g, '_')
       : this.getTableNameFromFilePath(filePath)
 
-    console.log(`📊 Nome da tabela: ${tableName}`)
+    console.log(`Nome da tabela: ${tableName}`)
 
     // IMPORTANTE: Criar tabela física com os dados do CSV
     console.log('🏗️ Criando tabela física no banco de dados...')
-    const rowCount = await this.createPhysicalTable(filePath, tableName, columns, separator)
-    console.log(`✅ Tabela criada com ${rowCount} linhas importadas`)
+    const { rowCount, columnsWithTypes } = await this.createPhysicalTable(filePath, tableName, columns, separator)
+    console.log(`Tabela criada com ${rowCount} linhas importadas`)
 
     // Para cada coluna, gerar embedding e salvar no vetor
-    console.log(`🧠 Processando ${columns.length} colunas para gerar embeddings...`)
+    console.log(`Processando ${columns.length} colunas para gerar embeddings...`)
     for (let i = 0; i < columns.length; i++) {
       const column = columns[i]
       console.log(`  [${i + 1}/${columns.length}] Processando coluna: ${column.name}`)
@@ -89,24 +89,29 @@ export default class IngestionService {
         description,
         embedding
       )
-      console.log(`    ✅ Coluna ${column.name} processada`)
+      console.log(`    Coluna ${column.name} processada`)
     }
-    console.log('✅ Todos os embeddings foram gerados e salvos')
+    console.log('Todos os embeddings foram gerados e salvos')
+
+    // Calcular resumo estatístico (Top 5 valores de colunas categóricas) para o Morgan
+    console.log('📊 Calculando resumo estatístico (Top 5 por coluna categórica)...')
+    const columnStats = await this.calculateColumnStats(tableName, columnsWithTypes)
 
     // Registrar o dataset no banco de dados
-    console.log('💾 Registrando dataset no banco...')
+    console.log('Registrando dataset no banco...')
     const db = (await import('@adonisjs/lucid/services/db')).default
     await db.table('datasets').insert({
       original_name: fileName || filePath.split('/').pop() || 'unknown.csv',
       internal_table_name: tableName,
       column_count: columns.length,
       row_count: rowCount,
+      column_stats: columnStats,
       created_at: new Date(),
       updated_at: new Date()
     })
-    console.log('✅ Dataset registrado')
+    console.log('Dataset registrado')
 
-    console.log('🎉 Processamento concluído com sucesso!')
+    console.log('Processamento concluído com sucesso!')
     return {
       tableName,
       columnsProcessed: columns.length,
@@ -116,20 +121,38 @@ export default class IngestionService {
   }
 
   /**
+   * Sanitiza nome de coluna para uso seguro em PostgreSQL.
+   * Remove pontos (evita interpretação tabela.coluna), aspas e substitui espaços por underscores.
+   */
+  private sanitizeColumnName(raw: string, index: number): string {
+    let cleaned = raw
+      .trim()
+      .replace(/[."]/g, '')        // Remove pontos e aspas
+      .replace(/\s+/g, '_')       // Substitui espaços por underscores
+      .toLowerCase()              // Padroniza para minúsculas
+
+    if (!cleaned) return `column_${index + 1}`
+    return cleaned
+  }
+
+  /**
    * Extrai colunas de um arquivo CSV
    */
-  private async extractColumnsFromCSV(filePath: string, separator: string = ','): Promise<Array<{ name: string, type?: string }>> {
+  private async extractColumnsFromCSV(filePath: string, separator: string = ','): Promise<Array<{ name: string, type?: string, originalHeader?: string }>> {
     return new Promise((resolve, reject) => {
-      const columns: Array<{ name: string, type?: string }> = []
+      const columns: Array<{ name: string, type?: string, originalHeader?: string }> = []
       let resolved = false
 
       const stream = fs.createReadStream(filePath)
         .pipe(csvParser({ separator }))
         .on('data', (row) => {
           if (!resolved) {
-            // Pega os nomes das colunas (keys do primeiro objeto)
+            // Pega os nomes das colunas (keys do primeiro objeto) e sanitiza para PostgreSQL
             const columnNames = Object.keys(row)
-            columns.push(...columnNames.map((name) => ({ name: name.trim() })))
+            columns.push(...columnNames.map((name, i) => ({
+              name: this.sanitizeColumnName(name, i),
+              originalHeader: name.trim()
+            })))
             console.log('✅ Extração de colunas concluída')
             resolved = true
             stream.destroy() // Parar de ler o arquivo
@@ -152,10 +175,15 @@ export default class IngestionService {
   private async createPhysicalTable(
     filePath: string,
     tableName: string,
-    columns: Array<{ name: string, type?: string }>,
+    columns: Array<{ name: string, type?: string, originalHeader?: string }>,
     separator: string = ','
-  ): Promise<number> {
+  ): Promise<{ rowCount: number; columnsWithTypes: Array<{ name: string; type: string }> }> {
     const db = (await import('@adonisjs/lucid/services/db')).default
+
+    // Mapa: nome sanitizado (usado na tabela) -> cabeçalho original do CSV (para ler das linhas)
+    const headerByColName = Object.fromEntries(
+      columns.map(c => [c.name, c.originalHeader ?? c.name])
+    )
 
     // Inferir tipos de dados analisando os dados
     const columnsWithTypes = await this.inferColumnTypes(filePath, columns, separator)
@@ -187,8 +215,10 @@ export default class IngestionService {
     })
     console.log(`    ✅ ${rows.length} linhas lidas do CSV`)
 
-    // Inserir dados em lotes usando bulk insert para melhor performance
-    const batchSize = 500 // Aumentado para melhor performance
+    // Inserir dados em lotes: PostgreSQL tem limite de ~65.535 parâmetros por query
+    const maxParamsPerQuery = 65000
+    const paramsPerRow = columnsWithTypes.length
+    const batchSize = Math.max(1, Math.min(500, Math.floor(maxParamsPerQuery / paramsPerRow)))
     const totalBatches = Math.ceil(rows.length / batchSize)
 
     console.log(`    💾 Inserindo dados em ${totalBatches} lotes de até ${batchSize} linhas...`)
@@ -201,7 +231,8 @@ export default class IngestionService {
       const valueSets: any[][] = []
       for (const row of batch) {
         const values = columnsWithTypes.map(col => {
-          const value = row[col.name]
+          const csvKey = headerByColName[col.name] ?? col.name
+          const value = row[csvKey]
           return value === undefined || value === null || value === '' ? null : value
         })
         valueSets.push(values)
@@ -226,7 +257,7 @@ export default class IngestionService {
     }
 
     console.log(`    ✅ Total de ${rowCount} linhas inseridas com sucesso`)
-    return rowCount
+    return { rowCount, columnsWithTypes }
   }
 
   /**
@@ -234,7 +265,7 @@ export default class IngestionService {
    */
   private async inferColumnTypes(
     filePath: string,
-    columns: Array<{ name: string, type?: string }>,
+    columns: Array<{ name: string, type?: string, originalHeader?: string }>,
     separator: string = ','
   ): Promise<Array<{ name: string, type: string }>> {
     const sampleRows: any[] = []
@@ -255,7 +286,8 @@ export default class IngestionService {
     })
 
     return columns.map(col => {
-      const values = sampleRows.map(row => row[col.name]).filter(v => v !== null && v !== undefined && v !== '')
+      const csvKey = col.originalHeader ?? col.name
+      const values = sampleRows.map(row => row[csvKey]).filter(v => v !== null && v !== undefined && v !== '')
 
       if (values.length === 0) {
         return { name: col.name, type: 'TEXT' }
@@ -315,6 +347,111 @@ export default class IngestionService {
       // Retornar um array de zeros como fallback (não ideal, mas evita falhas)
       return Array(1024).fill(0)
     }
+  }
+
+  /**
+   * Indica se o nome da coluna sugere "valor" (montante, venda, tarifa, etc.)
+   */
+  private isValueColumn(colName: string): boolean {
+    const lower = colName.toLowerCase()
+    const valuePatterns = [
+      'amount', 'sales', 'fare', 'value', 'price', 'total', 'revenue',
+      'valor', 'venda', 'preco', 'tarifa', 'receita', 'montante', 'sum'
+    ]
+    return valuePatterns.some(p => lower.includes(p))
+  }
+
+  /**
+   * Escolhe a coluna "dimensão" principal (ex: Vendedor, Categoria) para cruzar com valores.
+   * Preferência: primeira coluna TEXT; ou nome que sugira dimensão (seller, category, name, etc.).
+   */
+  private pickDimensionColumn(columns: Array<{ name: string; type: string }>): { name: string; type: string } | null {
+    const dimensionPatterns = ['seller', 'vendedor', 'category', 'categoria', 'name', 'nome', 'product', 'country', 'region']
+    const textColumns = columns.filter(c => c.type === 'TEXT')
+    const byName = textColumns.find(c => dimensionPatterns.some(p => c.name.toLowerCase().includes(p)))
+    return byName ?? textColumns[0] ?? null
+  }
+
+  /**
+   * Calcula os 5 valores mais comuns para cada coluna de texto/categoria (frequência)
+   * e, para colunas numéricas de "valor", o Top 5 por SOMA agrupado pela dimensão principal.
+   * Permite que o Morgan responda "David vendeu X" sem rodar SQL.
+   */
+  private async calculateColumnStats(
+    tableName: string,
+    columns: Array<{ name: string; type: string }>
+  ): Promise<Record<string, Record<string, number>> | null> {
+    const db = (await import('@adonisjs/lucid/services/db')).default
+    const stats: Record<string, Record<string, number>> = {}
+
+    console.log(`📊 Calculando resumo estatístico para a tabela: ${tableName}`)
+
+    // --- 1) Top 5 por FREQUÊNCIA (colunas categóricas) ---
+    for (const col of columns) {
+      if (col.type !== 'TEXT' && col.type !== 'INTEGER') continue
+
+      try {
+        let query = db
+          .from(tableName)
+          .select(col.name, db.raw('COUNT(*) as cnt'))
+          .whereNotNull(col.name)
+
+        if (col.type === 'TEXT') {
+          query = query.whereNot(col.name, '')
+        }
+
+        const result = await query
+          .groupBy(col.name)
+          .orderBy('cnt', 'desc')
+          .limit(5)
+
+        if (result && result.length > 0) {
+          const topValues: Record<string, number> = {}
+          for (const row of result as any[]) {
+            const val = row[col.name] !== null ? String(row[col.name]) : 'Nulo'
+            topValues[val] = Number(row.cnt)
+          }
+          stats[col.name] = topValues
+        }
+      } catch (err) {
+        console.error(`Erro ao processar coluna ${col.name}:`, (err as Error).message)
+      }
+    }
+
+    // --- 2) Top 5 por SOMA: colunas de valor (FLOAT/INTEGER) cruzadas com a dimensão principal ---
+    const dimensionCol = this.pickDimensionColumn(columns)
+    const valueColumns = columns.filter(
+      c => (c.type === 'FLOAT' || c.type === 'INTEGER') && this.isValueColumn(c.name)
+    )
+
+    if (dimensionCol && valueColumns.length > 0) {
+      const quotedTable = `"${tableName}"`
+      const quotedDim = `"${dimensionCol.name}"`
+
+      for (const valueCol of valueColumns) {
+        const quotedVal = `"${valueCol.name}"`
+        try {
+          const sumResult = await db.rawQuery(
+            `SELECT ${quotedDim}, SUM(${quotedVal}) AS total FROM ${quotedTable} WHERE ${quotedDim} IS NOT NULL AND ${quotedVal} IS NOT NULL GROUP BY ${quotedDim} ORDER BY total DESC LIMIT 5`
+          )
+          const rows = (sumResult.rows || []) as Array<Record<string, unknown>>
+          if (rows.length > 0) {
+            const key = `${valueCol.name}_sum_by_${dimensionCol.name}`
+            const topBySum: Record<string, number> = {}
+            for (const row of rows) {
+              const dimVal = row[dimensionCol.name] != null ? String(row[dimensionCol.name]) : 'Nulo'
+              topBySum[dimVal] = Number(row.total)
+            }
+            stats[key] = topBySum
+            console.log(`  ✓ Top 5 por SOMA: ${key}`, Object.keys(topBySum))
+          }
+        } catch (err) {
+          console.error(`Erro ao calcular soma por dimensão (${valueCol.name} por ${dimensionCol.name}):`, (err as Error).message)
+        }
+      }
+    }
+
+    return Object.keys(stats).length ? stats : null
   }
 
   /**

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+::-webkit-scrollbar {
+  width: 0;
+}
+
 @layer utilities {
   /* Custom scrollbar for code blocks */
   .code-scroll::-webkit-scrollbar {
