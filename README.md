@@ -4,7 +4,7 @@ Sistema de **geração de SQL e análise de dados em linguagem natural**, com um
 
 ---
 
-## Introdução
+### Introdução
 
 O **SQLAIGen** permite que usuários explorem dados sem precisar dominar SQL. Basta carregar um dataset (por exemplo, um CSV exportado do Kaggle), e o sistema:
 
@@ -15,7 +15,7 @@ O backend usa **embeddings** (Mistral) e **busca por similaridade** (pgvector) p
 
 ---
 
-## Contexto geral
+### Contexto geral
 
 - **Problema:** Muitos usuários têm dados em CSV ou tabelas mas não sabem escrever SQL ou não conhecem bem o esquema.
 - **Solução:** Uma aplicação que aceita upload de CSV, constrói um “esquema semântico” (metadados + embeddings das colunas) e oferece:
@@ -26,7 +26,7 @@ O Morgan segue regras rígidas: não inventa rankings a partir de amostras; dist
 
 ---
 
-## Objetivos
+### Objetivos
 
 - Permitir **análise de dados por linguagem natural**, reduzindo a barreira do SQL.
 - Gerar **consultas SQL válidas em PostgreSQL** a partir de perguntas em texto.
@@ -36,7 +36,7 @@ O Morgan segue regras rígidas: não inventa rankings a partir de amostras; dist
 
 ---
 
-## Funcionalidades
+### Funcionalidades
 
 | Funcionalidade | Descrição |
 |----------------|-----------|
@@ -49,7 +49,7 @@ O Morgan segue regras rígidas: não inventa rankings a partir de amostras; dist
 
 ---
 
-## Imagens do Morgan
+#### Imagens do Morgan
 
 O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso personagem fictício que guia os usuários no **Modo Conversa** e dá vida às análises em linguagem natural.
 
@@ -57,7 +57,7 @@ O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso pe
 
 ---
 
-## Exemplos de uso com o dataset “AI Models Benchmark 2026” (Kaggle)
+### Exemplos de uso com o dataset “AI Models Benchmark 2026” (Kaggle)
 
 O dataset **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)** do Kaggle contém informações sobre modelos de IA (nome, provedor, parâmetros, janela de contexto, benchmarks etc.). Após fazer o download do CSV e carregá-lo no SQLAIGen pela **Fonte de Dados**, você pode usar o Morgan e o Laboratório de Consultas da seguinte forma.
 
@@ -69,7 +69,7 @@ O dataset **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/d
 
 Assim, o usuário obtém **insight em texto** (Morgan) e **SQL reutilizável** (laboratório).
 
-### Exemplo 2: Outras perguntas típicas sobre o mesmo dataset
+#### Exemplo 2: Outras perguntas típicas sobre o mesmo dataset
 
 - *“Quais modelos têm mais de 100B parâmetros?”*  
   → Morgan descreve os achados; o laboratório gera um `SELECT` com filtro na coluna de parâmetros.
@@ -84,7 +84,7 @@ Nesses casos, o Morgan **analisa os dados** (estatísticas e amostras) e o **Lab
 
 ---
 
-## Stack técnica (resumo)
+### Stack técnica (resumo)
 
 - **Frontend:** React, TypeScript, Vite.
 - **Backend:** AdonisJS 6 (Node.js).
@@ -93,7 +93,7 @@ Nesses casos, o Morgan **analisa os dados** (estatísticas e amostras) e o **Lab
 
 ---
 
-## Como executar
+### Como executar
 
 1. **Backend:** na pasta do backend (ex.: `sql-ai-generator/backend`), configurar `.env` (incluindo `MISTRAL_API_KEY` e conexão PostgreSQL com pgvector). Em seguida: `npm install` e `node ace serve --hmr` (ou `npm run dev`).
 2. **Frontend:** na pasta do frontend (ex.: `sql-ai-generator/sqlaigenerator`), `npm install` e `npm run dev`.
@@ -101,7 +101,7 @@ Nesses casos, o Morgan **analisa os dados** (estatísticas e amostras) e o **Lab
 
 ---
 
-## Referência do dataset de exemplo
+#### Referência do dataset de exemplo
 
 - **Dataset:** [AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest) (Kaggle).  
 - Uso no SQLAIGen: após download e upload do CSV, o Morgan analisa os dados e o sistema gera SQL e insights para perguntas sobre modelos, janela de contexto, parâmetros, benchmarks e provedores.
