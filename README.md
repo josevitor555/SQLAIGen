@@ -53,9 +53,8 @@ O Morgan segue regras rígidas: não inventa rankings a partir de amostras; dist
 
 O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso personagem fictício que guia os usuários no **Modo Conversa** e dá vida às análises em linguagem natural.
 
-![Morgan](sql-ai-generator\sqlaigenerator\public\morgan.png)
+<img width="1024" height="1536" alt="morgan" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" />
 
----
 
 ## Exemplos de uso com o dataset “AI Models Benchmark 2026” (Kaggle)
 
