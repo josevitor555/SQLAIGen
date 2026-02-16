@@ -93,7 +93,7 @@ export default class IngestionService {
     }
     console.log('Todos os embeddings foram gerados e salvos')
 
-    // Calcular resumo estatístico (Top 5 valores de colunas categóricas) para o Morgan
+    // Calcular resumo estatístico (Top 5 valores de colunas categóricas) para o Connor
     console.log('📊 Calculando resumo estatístico (Top 5 por coluna categórica)...')
     const columnStats = await this.calculateColumnStats(tableName, columnsWithTypes)
 
@@ -375,7 +375,7 @@ export default class IngestionService {
   /**
    * Calcula os 5 valores mais comuns para cada coluna de texto/categoria (frequência)
    * e, para colunas numéricas de "valor", o Top 5 por SOMA agrupado pela dimensão principal.
-   * Permite que o Morgan responda "David vendeu X" sem rodar SQL.
+   * Permite que o Connor responda "David vendeu X" sem rodar SQL.
    */
   private async calculateColumnStats(
     tableName: string,

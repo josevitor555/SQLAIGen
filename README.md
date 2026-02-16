@@ -1,108 +1,108 @@
 ### SQLAIGen
 
-Sistema de **geração de SQL e análise de dados em linguagem natural**, com um assistente conversacional (Morgan) que interpreta perguntas sobre conjuntos de dados, retorna consultas SQL e insights baseados na estrutura e no conteúdo dos dados.
+A **natural-language SQL generation and data analysis** system, featuring a conversational assistant (Connor) that interprets questions about datasets, returns SQL queries, and delivers insights based on the structure and content of the data.
 
 ---
 
-### Introdução
+### Introduction
 
-O **SQLAIGen** permite que usuários explorem dados sem precisar dominar SQL. Basta carregar um dataset (por exemplo, um CSV exportado do Kaggle), e o sistema:
+**SQLAIGen** lets users explore data without needing to master SQL. Load a dataset (e.g. a CSV exported from Kaggle), and the system:
 
-- **Gera consultas SQL** a partir de perguntas em português (ou outro idioma).
-- **Conversa sobre os dados** por meio do **Morgan**, analista de dados sênior da empresa fictícia *The Boring Interprise*, que explica achados, cita exemplos e sugere análises.
+- **Generates SQL queries** from questions in natural language (English or other languages).
+- **Converses about the data** through **Connor**, senior data analyst at the fictional company *The Boring Interprise*, who explains findings, cites examples, and suggests further analyses.
 
-O backend usa **embeddings** (Mistral) e **busca por similaridade** (pgvector) para mapear a pergunta do usuário às colunas e tabelas mais relevantes, garantindo que o SQL e as respostas do Morgan estejam alinhados ao esquema real dos dados.
-
----
-
-### Contexto geral
-
-- **Problema:** Muitos usuários têm dados em CSV ou tabelas mas não sabem escrever SQL ou não conhecem bem o esquema.
-- **Solução:** Uma aplicação que aceita upload de CSV, constrói um “esquema semântico” (metadados + embeddings das colunas) e oferece:
-  1. **Laboratório de Consultas:** pergunta em texto → SQL gerado por IA.
-  2. **Modo Conversa:** diálogo com o Morgan, que analisa os dados (estatísticas, amostras, agregações pré-calculadas) e responde em linguagem natural, sem exibir SQL, com tom de analista sênior.
-
-O Morgan segue regras rígidas: não inventa rankings a partir de amostras; distingue frequência de soma; quando não tiver o dado exato, sugere usar o Modo SQL. Assim, o sistema combina **conversa amigável** com **rigor analítico**.
+The backend uses **embeddings** (Mistral) and **similarity search** (pgvector) to map the user’s question to the most relevant columns and tables, so that the generated SQL and Connor’s answers stay aligned with the actual data schema.
 
 ---
 
-### Objetivos
+### Overview
 
-- Permitir **análise de dados por linguagem natural**, reduzindo a barreira do SQL.
-- Gerar **consultas SQL válidas em PostgreSQL** a partir de perguntas em texto.
-- Oferecer um **assistente conversacional (Morgan)** que interpreta perguntas, cita exemplos reais e sugere próximos passos.
-- Manter **consistência com o esquema**: uso de embeddings e metadados para que SQL e respostas do Morgan reflitam as colunas e tabelas carregadas.
-- Suportar **histórico de conversa** (por sessão) e **histórico de consultas** no laboratório.
+- **Problem:** Many users have data in CSV or tables but don’t know how to write SQL or aren’t familiar with the schema.
+- **Solution:** An application that accepts CSV uploads, builds a “semantic schema” (metadata + column embeddings), and provides:
+  1. **Query Lab:** natural-language question → AI-generated SQL.
+  2. **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
 
----
-
-### Funcionalidades
-
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| **Fonte de Dados** | Upload de arquivo CSV; detecção automática de separador (`,` ou `;`); criação de tabela no PostgreSQL e registro do dataset. |
-| **Esquema Semântico** | Geração de descrições e embeddings (Mistral) para cada coluna; armazenamento em `table_contexts` (pgvector) para busca por similaridade. |
-| **Laboratório de Consultas** | Pergunta em linguagem natural → geração de uma única query SQL (PostgreSQL), com aspas duplas e case corretos; opção de executar a query e ver resultados. |
-| **Modo Conversa** | Chat com o **Morgan**, que recebe contexto do esquema, amostra dos dados e estatísticas (contagens, agregações). Responde em texto, citando exemplos quando possível, sem exibir SQL. |
-| **Histórico** | Histórico de perguntas e SQL geradas no laboratório; histórico de mensagens do chat por identificador de sessão. |
-| **Tema** | Alternância entre modo claro e escuro (persistida em `localStorage`). |
+Connor follows strict rules: he does not invent rankings from samples; he distinguishes frequency from sum; when exact data isn’t available, he suggests using SQL Mode. The system combines **friendly conversation** with **analytical rigor**.
 
 ---
 
-#### Imagens do Morgan
+### Goals
 
-O **Morgan** é o analista de dados sênior da *The Boring Interprise*, nosso personagem fictício que guia os usuários no **Modo Conversa** e dá vida às análises em linguagem natural.
-
-<img width="1024" height="1536" alt="morgan" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" />
-
-
-### Exemplos de uso com o dataset “AI Models Benchmark 2026” (Kaggle)
-
-O dataset **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)** do Kaggle contém informações sobre modelos de IA (nome, provedor, parâmetros, janela de contexto, benchmarks etc.). Após fazer o download do CSV e carregá-lo no SQLAIGen pela **Fonte de Dados**, você pode usar o Morgan e o Laboratório de Consultas da seguinte forma.
+- Enable **data analysis in natural language**, lowering the SQL barrier.
+- Generate **valid PostgreSQL SQL** from text questions.
+- Provide a **conversational assistant (Connor)** that interprets questions, cites real examples, and suggests next steps.
+- Keep **schema consistency**: embeddings and metadata so that SQL and Connor’s answers reflect the loaded columns and tables.
+- Support **conversation history** (per session) and **query history** in the lab.
 
 ---
 
-### Exemplo 1: “Qual modelo de IA tem maior janela de contexto?”
+### Features
 
-- **Modo Conversa (Morgan):** O Morgan usa o esquema semântico e as estatísticas do dataset (por exemplo, colunas como “context window” ou “context_length”) para identificar o modelo com maior janela de contexto. A resposta é em linguagem natural, citando o nome do modelo e o valor quando disponível, e pode sugerir refinamentos ou perguntas complementares.
-- **Laboratório de Consultas:** O usuário digita a mesma pergunta; o sistema gera uma query SQL, por exemplo:
-  - Ordenar por janela de contexto (ou coluna equivalente) em ordem decrescente e retornar o primeiro registro (ou top N), usando a tabela e os nomes de colunas reais do CSV carregado.
-
-Assim, o usuário obtém **insight em texto** (Morgan) e **SQL reutilizável** (laboratório).
-
-#### Exemplo 2: Outras perguntas típicas sobre o mesmo dataset
-
-- *“Quais modelos têm mais de 100B parâmetros?”*  
-  → Morgan descreve os achados; o laboratório gera um `SELECT` com filtro na coluna de parâmetros.
-
-- *“Qual o modelo com melhor score no benchmark X?”*  
-  → Morgan pode citar o modelo e o score; o laboratório gera SQL com `ORDER BY` na coluna de benchmark e `LIMIT 1` (ou equivalente).
-
-- *“Liste todos os provedores únicos.”*  
-  → Morgan resume os provedores; o laboratório gera `SELECT DISTINCT "provider"` (ou nome real da coluna) na tabela carregada.
-
-Nesses casos, o Morgan **analisa os dados** (estatísticas e amostras) e o **Laboratório de Consultas** entrega a **query SQL** correspondente, sempre alinhada ao esquema do dataset carregado (incluindo o AI Models Benchmark 2026).
+| Feature | Description |
+|--------|-------------|
+| **Data Source** | CSV file upload; automatic delimiter detection (`,` or `;`); table creation in PostgreSQL and dataset registration. |
+| **Semantic Schema** | Descriptions and embeddings (Mistral) for each column; stored in `table_contexts` (pgvector) for similarity search. |
+| **Query Lab** | Natural-language question → single PostgreSQL SQL query, with correct quoting and casing; option to run the query and view results. |
+| **Conversation Mode** | Chat with **Connor**, who receives schema context, data sample, and statistics (counts, aggregations). He responds in text, citing examples when possible, without showing SQL. |
+| **History** | History of questions and generated SQL in the lab; chat message history per session identifier. |
+| **Theme** | Toggle between light and dark mode (persisted in `localStorage`). |
 
 ---
 
-### Stack técnica (resumo)
+#### Connor’s Image
+
+**Connor** is the senior data analyst at *The Boring Interprise*, our fictional character who guides users in **Conversation Mode** and brings natural-language analyses to life.
+
+<img width="1024" height="1536" alt="connor" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" />
+
+
+### Example usage with the “AI Models Benchmark 2026” dataset (Kaggle)
+
+The **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)** from Kaggle contains information about AI models (name, provider, parameters, context window, benchmarks, etc.). After downloading the CSV and loading it in SQLAIGen via **Data Source**, you can use Connor and the Query Lab as follows.
+
+---
+
+### Example 1: “Which AI model has the largest context window?”
+
+- **Conversation Mode (Connor):** Connor uses the semantic schema and dataset statistics (e.g. columns like “context window” or “context_length”) to identify the model with the largest context window. The answer is in natural language, citing the model name and value when available, and may suggest refinements or follow-up questions.
+- **Query Lab:** The user types the same question; the system generates a SQL query, e.g.:
+  - Order by context window (or equivalent column) descending and return the first row (or top N), using the table and real column names from the loaded CSV.
+
+Thus the user gets **text insight** (Connor) and **reusable SQL** (lab).
+
+#### Example 2: Other typical questions on the same dataset
+
+- *“Which models have more than 100B parameters?”*  
+  → Connor describes the findings; the lab generates a `SELECT` with a filter on the parameters column.
+
+- *“Which model has the best score on benchmark X?”*  
+  → Connor may cite the model and score; the lab generates SQL with `ORDER BY` on the benchmark column and `LIMIT 1` (or equivalent).
+
+- *“List all unique providers.”*  
+  → Connor summarizes the providers; the lab generates `SELECT DISTINCT "provider"` (or the actual column name) on the loaded table.
+
+In these cases, Connor **analyzes the data** (statistics and samples) and the **Query Lab** delivers the corresponding **SQL query**, always aligned with the loaded dataset schema (including AI Models Benchmark 2026).
+
+---
+
+### Tech stack (summary)
 
 - **Frontend:** React, TypeScript, Vite.
 - **Backend:** AdonisJS 6 (Node.js).
-- **Banco:** PostgreSQL com extensão pgvector (embeddings).
-- **IA:** Mistral (LangChain) para embeddings e geração de texto/SQL.
+- **Database:** PostgreSQL with pgvector extension (embeddings).
+- **AI:** Mistral (LangChain) for embeddings and text/SQL generation.
 
 ---
 
-### Como executar
+### How to run
 
-1. **Backend:** na pasta do backend (ex.: `sql-ai-generator/backend`), configurar `.env` (incluindo `MISTRAL_API_KEY` e conexão PostgreSQL com pgvector). Em seguida: `npm install` e `node ace serve --hmr` (ou `npm run dev`).
-2. **Frontend:** na pasta do frontend (ex.: `sql-ai-generator/sqlaigenerator`), `npm install` e `npm run dev`.
-3. Acessar a aplicação, ir em **Fonte de Dados**, fazer upload do CSV (por exemplo, o do [AI Models Benchmark Dataset 2026](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)), e depois usar **Modo Conversa** (Morgan) e **Laboratório de Consultas** com perguntas como *“Qual modelo de IA tem maior janela de contexto?”*.
+1. **Backend:** In the backend folder (e.g. `sql-ai-generator/backend`), configure `.env` (including `MISTRAL_API_KEY` and PostgreSQL connection with pgvector). Then: `npm install` and `node ace serve --hmr` (or `npm run dev`).
+2. **Frontend:** In the frontend folder (e.g. `sql-ai-generator/sqlaigenerator`), run `npm install` and `npm run dev`.
+3. Open the app, go to **Data Source**, upload a CSV (e.g. from [AI Models Benchmark Dataset 2026](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest)), then use **Conversation Mode** (Connor) and **Query Lab** with questions like *“Which AI model has the largest context window?”*.
 
 ---
 
-#### Referência do dataset de exemplo
+#### Example dataset reference
 
 - **Dataset:** [AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/datasets/asadullahcreative/ai-models-benchmark-dataset-2026-latest) (Kaggle).  
-- Uso no SQLAIGen: após download e upload do CSV, o Morgan analisa os dados e o sistema gera SQL e insights para perguntas sobre modelos, janela de contexto, parâmetros, benchmarks e provedores.
+- In SQLAIGen: after downloading and uploading the CSV, Connor analyzes the data and the system generates SQL and insights for questions about models, context window, parameters, benchmarks, and providers.

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { Send, Loader2, User, Bot, Database } from 'lucide-react';
 
 export interface ChatMessage {
@@ -128,7 +130,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
           Modo Conversa
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl">
-          Converse com o Morgan, seu analista de dados sênior da The Boring Interprise, ele analisa sobre seu conjunto de dados. O assistente analisa a estrutura, colunas e relacionamentos.
+          Chat with Connor, your senior data analyst at The Boring Interprise; he analyzes your dataset. The assistant inspects structure, columns, and relationships.
         </p>
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Database size={14} />
@@ -182,12 +184,49 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
                 >
                   <div
                     className={`inline-block rounded-xl px-4 py-3 ${msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted border border-subtle text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted border border-subtle text-foreground'
                       }`}
                   >
-                    <div className="text-base break-words text-left prose prose-sm dark:prose-invert max-w-none [&_*]:text-inherit [&_*]:m-0 [&_ul]:my-2 [&_ol]:my-2 [&_p]:my-1.5 [&_p:first]:mt-0 [&_p:last]:mb-0">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <div className="text-base break-words text-left prose prose-sm dark:prose-invert max-w-none [&_*]:text-inherit [&_ul]:my-2 [&_ol]:my-2 [&_p]:mt-4 [&_p]:mb-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0">
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => (
+                            <p className="mt-4 mb-4 first:mt-0 last:mb-0 text-inherit">{children}</p>
+                          ),
+                          code: ({ className, children, ...props }) => {
+                            const match = /language-(\w+)/.exec(className || '');
+                            const content = String(children).replace(/\n$/, '');
+                            const isBlock = Boolean(match);
+                            if (isBlock && match) {
+                              return (
+                                <SyntaxHighlighter
+                                  language={match[1]}
+                                  style={dark}
+                                  PreTag="div"
+                                  customStyle={{
+                                    marginTop: '0.75em',
+                                    marginBottom: '0.75em',
+                                    borderRadius: '0.5rem',
+                                    fontSize: '0.875rem',
+                                    padding: '0.75rem 1rem',
+                                  }}
+                                  codeTagProps={{ style: { fontFamily: 'inherit' } }}
+                                >
+                                  {content}
+                                </SyntaxHighlighter>
+                              );
+                            }
+                            return (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                     {msg.error && (
                       <div className="mt-3 status-error rounded-lg px-3 py-2 text-sm">

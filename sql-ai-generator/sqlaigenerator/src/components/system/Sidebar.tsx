@@ -9,7 +9,6 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }: SidebarProps) {
     const [isDark, setIsDark] = useState(() => {
-        // Verificar preferência salva ou padrão do sistema
         const saved = localStorage.getItem('theme');
         if (saved) return saved === 'dark';
         return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -52,7 +51,7 @@ export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }
                         </span>
                     </div>
 
-                    <nav className="space-y-4">
+                    <nav className="space-y-2">
                         {navItems.map((item) => {
                             const isActive = activeTab === item.id;
                             const Icon = item.icon;
@@ -60,7 +59,7 @@ export function Sidebar({ activeTab, onTabChange, className = "hidden md:flex" }
                                 <button
                                     key={item.id}
                                     onClick={() => onTabChange(item.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-base font-medium rounded-full transition-colors ${isActive
+                                    className={`w-full flex items-center gap-3 px-3 py-3 text-base font-medium rounded-full transition-colors ${isActive
                                         ? 'text-sidebar-foreground bg-muted ring-1 ring-sidebar-border'
                                         : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                                         }`}
