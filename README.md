@@ -53,9 +53,6 @@ Connor follows strict rules: he does not invent rankings from samples; he distin
 
 **Connor** is the senior data analyst at *The Boring Interprise*, our fictional character who guides users in **Conversation Mode** and brings natural-language analyses to life.
 
-<<<<<<< HEAD
-<img width="1024" height="1536" alt="connor" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" />
-=======
 <!-- <img width="1024" height="1536" alt="morgan" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" /> -->
 
 ![WhatsApp Image 2026-02-15 at 00 39 32](https://github.com/user-attachments/assets/0bf54e03-2ac7-4b8c-b457-fa2a1f10b1e5)
