@@ -57,8 +57,6 @@ Connor follows strict rules: he does not invent rankings from samples; he distin
 
 ![WhatsApp Image 2026-02-15 at 00 39 32](https://github.com/user-attachments/assets/0bf54e03-2ac7-4b8c-b457-fa2a1f10b1e5)
 ![WhatsApp Image 2026-02-15 at 00 40 02](https://github.com/user-attachments/assets/8043bae8-dc1c-4093-a759-f84fda2007b5)
->>>>>>> f058095d4ecbe4d9d9f606f509d05ede672726d9
-
 
 ### Example usage with the “AI Models Benchmark 2026” dataset (Kaggle)
 
