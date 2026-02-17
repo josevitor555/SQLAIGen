@@ -28,11 +28,11 @@ Connor follows strict rules: he does not invent rankings from samples; he distin
 
 ### Goals
 
-- Enable **data analysis in natural language**, lowering the SQL barrier.
-- Generate **valid PostgreSQL SQL** from text questions.
-- Provide a **conversational assistant (Connor)** that interprets questions, cites real examples, and suggests next steps.
-- Keep **schema consistency**: embeddings and metadata so that SQL and Connor’s answers reflect the loaded columns and tables.
-- Support **conversation history** (per session) and **query history** in the lab.
+- [x] Enable **data analysis in natural language**, lowering the SQL barrier.
+- [x] Generate **valid PostgreSQL SQL** from text questions.
+- [x] Provide a **conversational assistant (Connor)** that interprets questions, cites real examples, and suggests next steps.
+- [x] Keep **schema consistency**: embeddings and metadata so that SQL and Connor’s answers reflect the loaded columns and tables.
+- [x] Support **conversation history** (per session) and **query history** in the lab.
 
 ---
 
