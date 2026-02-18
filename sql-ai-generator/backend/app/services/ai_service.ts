@@ -1,10 +1,14 @@
 import { inject } from '@adonisjs/core'
 import db from '@adonisjs/lucid/services/db'
 import VectorService from './vector_service.js'
-import { ChatMistralAI } from '@langchain/mistralai'
-import { MistralAIEmbeddings } from '@langchain/mistralai'
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+import { MistralAIEmbeddings, ChatMistralAI } from '@langchain/mistralai'
+import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages'
 import ChatHistory from '#models/chat_history'
+
+type Message = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
 
 interface ColumnMetadata {
   id: number
@@ -17,14 +21,15 @@ interface ColumnMetadata {
 
 @inject()
 export default class AiService {
-  private mistralClient: ChatMistralAI
   private embeddingModel: MistralAIEmbeddings
+  private mistralClient: ChatMistralAI
+  private readonly defaultChatModelSlug = 'langchain:mistral'
 
   constructor(
     private vectorService: VectorService,
   ) {
-    this.mistralClient = new ChatMistralAI({ apiKey: process.env.MISTRAL_API_KEY })
     this.embeddingModel = new MistralAIEmbeddings({ apiKey: process.env.MISTRAL_API_KEY })
+    this.mistralClient = new ChatMistralAI({ apiKey: process.env.MISTRAL_API_KEY })
   }
 
   /**
@@ -106,26 +111,27 @@ CONTEXTO REAL DOS DADOS:
 - Amostra: ${sampleData}
 ${topValuesText}
 
-INSTRUÇÕES DE ANÁLISE (O "OLHAR" DO CONNOR, ANALISTA DA THE BORING INTERPRISE):
-1. **Identificação Direta**: Se o usuário perguntar por grupos específicos (ex: nobreza, crianças, tripulação), vasculhe a amostra de dados e os metadados em busca de nomes reais ou títulos que confirmem isso.
-2. **Citação de Exemplos**: Nunca diga apenas "existem títulos"; diga "identifiquei passageiros com títulos como 'Lady' ou 'Sir', como por exemplo [Citar Nome da Amostra se disponível]".
-3. **Cruzamento de Dados**: Se a pergunta for sobre aristocracia, use a lógica: Pclass = 1 + Títulos Específicos (Countess, Lady, Sir, Col, Major) + Fare Alto.
-4. **Tratamento de Nomes**: O Connor deve "ler" os nomes na coluna 'Name'. Se encontrar "Rothes, the Countess of" ou "Duff Gordon, Sir Cosmo", apresente isso como um achado valioso.
-5. **Proibição de Inferência Amostral (A Regra do Silêncio)**: Nunca use a "amostra" (sampleData) para concluir rankings ou totais. A amostra serve apenas para citar EXEMPLOS de nomes ou formatos. Para rankings de "quem vendeu mais" ou "quem sobreviveu mais", se o valor agregado não estiver nas columnStats (como uma estatística de SOMA), admita que não tem a soma exata e sugira ao usuário usar o Modo SQL.
+INSTRUÇÕES DE ANÁLISE:
+1. **Identificação Direta**: Analise a amostra de dados e os metadados em busca de informações que confirmem a pergunta do usuário.
+2. **Citação de Exemplos**: Cite exemplos reais encontrados na amostra para ilustrar sua resposta.
+3. **Cruzamento de Dados**: Utilize o raciocínio lógico para relacionar colunas e valores.
+4. **Tratamento de Nomes**: Identifique nomes relevantes na coluna de nomes, se houver, e apresente-os como achados.
+5. **Proibição de Inferência Amostral (A Regra do Silêncio)**: Nunca use a "amostra" (sampleData) para concluir rankings ou totais globais. A amostra serve apenas para citar EXEMPLOS de nomes ou formatos. Para rankings ou totais exatos, se o valor agregado não estiver nas columnStats, admita que não tem a soma exata e sugira ao usuário usar o Modo SQL.
 
 DIFERENÇA ENTRE FREQUÊNCIA E VALOR:
-- Se você vir algo como "David (222)" em uma agregação de FREQUÊNCIA, isso significa que David aparece 222 vezes nos registros (contagem).
+- Se você vir algo como "Valor (222)" em uma agregação de FREQUÊNCIA, isso significa que esse valor aparece 222 vezes nos registros (contagem).
 - NÃO assuma que ele é o maior em valor financeiro a menos que exista uma estatística explícita de SOMA (SUM) nas agregações acima.
-- Se a pergunta exigir uma conta (ex: "quem vendeu mais em valor?") que não estiver nas agregações (sem SOMA disponível), diga: "Consigo ver quem mais aparece nos registros (frequência), mas para saber o valor exato vendido, preciso processar uma query de soma. Quer que eu faça isso no Modo SQL?"
+- Se a pergunta exigir uma conta (ex: "quem vendeu mais em valor?") que não estiver nas agregações (sem SOMA disponível), diga: "Consigo ver quem mais aparece nos registros (frequência), mas para saber o valor exato, preciso processar uma query de soma. Quer que eu faça isso no Modo SQL?"
 6. **Dados Quantitativos**: Se o usuário perguntar "quantos?", "qual o total?", "tem mais X ou Y?", use os valores fornecidos nas agregações acima (FREQUÊNCIA ou SOMA conforme o caso). Não especule se você tiver o dado real.
 
-DIRETRIZES DE PERSONALIDADE (CONNOR / THE BORING INTERPRISE):
-- Connor é o analista que "garimpa" a informação. Use frases como: "Vasculhando aqui os registros de nomes, encontrei alguns títulos que confirmam..." ou "Olhando para os passageiros da primeira classe, alguns nomes saltam aos olhos, como...".
-- Mantenha o tom de conversa inteligente e proativo, no estilo de um analista sênior da The Boring Interprise. ✨
+DIRETRIZES DE PERSONALIDADE:
+- Você é um analista de dados sênior focado em extrair insights valiosos.
+- Use frases como: "Analisando os registros...", "Observando os dados...", "Encontrei alguns exemplos interessantes...".
+- Mantenha o tom profissional, objetivo e útil.
 - **SQL no Modo Conversa**: Quando for útil responder com uma consulta (ex.: "me mostre o SQL para...", "qual query retorna X?", ou quando a pergunta pedir listagem/agregação que exija SQL), inclua a query em um bloco markdown com syntax SQL. Use exatamente: \`\`\`sql seguido da query em uma ou mais linhas e feche com \`\`\`. Use aspas duplas em identificadores PostgreSQL e o mesmo case das tabelas/colunas do esquema acima. Assim o usuário pode copiar e executar no Laboratório. Para perguntas apenas exploratórias ou que você responde com estatísticas já disponíveis, responda só em texto.`
       : ''
 
-    return `Você é o Connor, analista de dados sênior da empresa fictícia "The Boring Interprise". Tem olhar clínico para detalhes e seu objetivo é extrair e apresentar fatos concretos do dataset, citando nomes e exemplos reais quando disponíveis.
+    return `Você é um analista de dados sênior experiente. Seu objetivo é extrair e apresentar fatos concretos do dataset, citando nomes e exemplos reais quando disponíveis, sempre baseando-se estritamente nos dados fornecidos.
 ${realDataContext}
 
 CONTEXTO DO ESQUEMA (metadados das colunas):
@@ -133,47 +139,57 @@ ${schemaInfo}
 
 ESTRUTURA DA RESPOSTA:
 1. Comece com uma frase de reconhecimento sobre o que o usuário perguntou.
-2. Apresente seus achados citando dados reais da amostra e das estatísticas (nomes, títulos, valores).
+2. Apresente seus achados citando dados reais da amostra e das estatísticas.
 3. Quando fizer sentido, inclua a query SQL em um bloco \`\`\`sql ... \`\`\` para o usuário poder copiar e executar.
-4. Termine com uma pergunta aberta ou sugestão instigante para manter o engajamento.`
+4. Termine com uma pergunta aberta ou sugestão para aprofundar a análise.`
   }
 
   /**
    * Analisa o dataset com base na pergunta do usuário - Modo Conversa.
    * Se identifier for informado: recupera histórico, envia contexto + nova pergunta para a IA e persiste user + assistant no banco.
    */
-  async analyzeDataset(question: string, identifier?: string): Promise<string> {
+  async analyzeDataset(question: string, identifier?: string, model?: string): Promise<string> {
     const systemPrompt = await this.buildAnalyzeSystemPrompt(question)
+    const selectedModel = model || this.defaultChatModelSlug
+    const useMistralLangChain = selectedModel === this.defaultChatModelSlug || selectedModel === 'mistralai/mistral-small-24b'
 
     try {
       if (identifier) {
         // 1. Recuperar: últimas mensagens do identifier
         const historyRows = await ChatHistory.getLastMessages(identifier, 10)
-        // 2. Formatar: no padrão que a API da IA exige (HumanMessage / AIMessage)
-        const historyMessages = historyRows.map((row) =>
-          row.role === 'user' ? new HumanMessage(row.content) : new AIMessage(row.content)
-        )
-        const messages = [
-          new SystemMessage(systemPrompt),
-          ...historyMessages,
-          new HumanMessage(question),
-        ]
-        // 3. Enviar: histórico + nova pergunta para a IA
-        const response = await this.mistralClient.invoke(messages)
-        const responseText = response.content.toString().trim()
+
+        // 2. Formatar: histórico de mensagens para o formato esperado pela IA
+        const messages: Message[] = [
+          { role: 'system', content: systemPrompt },
+          ...historyRows.map((row) => ({
+            role: row.role as 'user' | 'assistant',
+            content: row.content
+          })),
+          { role: 'user', content: question },
+        ];
+
+        // 3. Chamar: IA com o histórico de mensagens
+        const responseText = useMistralLangChain
+          ? await this.callMistralChat(messages)
+          : await this.callOpenRouter(messages, selectedModel)
+
         // 4. Salvar: nova pergunta do usuário e resposta da IA
-        await ChatHistory.create({ identifier, role: 'user', content: question })
-        await ChatHistory.create({ identifier, role: 'assistant', content: responseText })
+        await ChatHistory.create({ identifier, role: 'user', content: question, model: selectedModel })
+        await ChatHistory.create({ identifier, role: 'assistant', content: responseText, model: selectedModel })
         return responseText
       }
 
-      const prompt = `${systemPrompt}
+      // 5. Chamar: IA sem histórico (primeira pergunta)
+      const messages: Message[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: question },
+      ]
 
-PERGUNTA DO USUÁRIO: ${question}
-
-Responda com sua análise:`
-      const response = await this.mistralClient.invoke(prompt)
-      return response.content.toString().trim()
+      // 6. Retornar: resposta da IA sem persistência
+      const responseText = useMistralLangChain
+        ? await this.callMistralChat(messages)
+        : await this.callOpenRouter(messages, selectedModel)
+      return responseText
     } catch (error) {
       console.error('Erro ao analisar dataset:', error)
       throw new Error(`Falha ao analisar o dataset: ${(error as Error).message}`)
@@ -301,5 +317,54 @@ Exemplo: SELECT c."Country", SUM(...) FROM "tabela" c GROUP BY c."Country"`
       console.error('Erro ao gerar SQL:', error)
       throw new Error(`Falha ao gerar consulta SQL: ${(error as Error).message}`)
     }
+  }
+
+  /**
+   * Chama o OpenRouter usando a compatibilidade com o OpenAI Chat Completions
+   */
+  private async callOpenRouter(
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    model: string
+  ): Promise<string> {
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      throw new Error('OPENROUTER_API_KEY não configurada no ambiente')
+    }
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.APP_URL || 'http://localhost:3333',
+        'X-Title': 'SQLAIGen',
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+      }),
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`OpenRouter erro ${res.status}: ${text}`)
+    }
+
+    const data = await res.json() as {
+      choices: Array<{ message?: { content?: string }, delta?: { content?: string } }>
+    }
+    const content = data?.choices?.[0]?.message?.content || ''
+    return (content || '').trim()
+  }
+
+  private async callMistralChat(messages: Message[]): Promise<string> {
+    const langChainMessages = messages.map((m) => {
+      if (m.role === 'system') return new SystemMessage(m.content)
+      if (m.role === 'assistant') return new AIMessage(m.content)
+      return new HumanMessage(m.content)
+    })
+
+    const res = await this.mistralClient.invoke(langChainMessages)
+    return (res.content?.toString() || '').trim()
   }
 }

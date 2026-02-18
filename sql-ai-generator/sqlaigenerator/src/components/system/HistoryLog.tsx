@@ -1,4 +1,7 @@
 import { Trash2, XCircle } from 'lucide-react';
+import { useEffect } from 'react';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 export interface HistoryItem {
     id: string;
@@ -13,7 +16,15 @@ interface HistoryLogProps {
     onClearHistory: () => void;
 }
 
+export const HISTORY_STORAGE_KEY = 'query_history';
+
 export function HistoryLog({ history, onClearHistory }: HistoryLogProps) {
+    useEffect(() => {
+        try {
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+        } catch {}
+    }, [history]);
+
     return (
         <div className="max-w-4xl mx-auto py-12 px-6 fade-in h-full overflow-auto text-foreground">
             <header className="mb-8 flex items-center justify-between">
@@ -46,7 +57,7 @@ export function HistoryLog({ history, onClearHistory }: HistoryLogProps) {
                 {history.map((item) => (
                     <div
                         key={item.id}
-                        className={`bg-[#1a1a1a] rounded-lg border border-white/10 p-5 hover:border-white/20 transition-all ${item.error ? 'opacity-60' : ''}`}
+                        className={`bg-muted rounded-lg border border-white/10 p-5 hover:border-white/20 transition-all ${item.error ? 'opacity-60' : ''}`}
                     >
                         <div className="flex justify-between items-start mb-3">
                             <p className="text-base font-medium text-muted-foreground">"{item.query}"</p>
@@ -59,10 +70,21 @@ export function HistoryLog({ history, onClearHistory }: HistoryLogProps) {
                                 <span>{item.error}</span>
                             </div>
                         ) : (
-                            <div className="bg-muted/20 rounded border border-subtle p-3">
-                                <code className="text-base text-muted-foreground break-all">
-                                    {item.sql}
-                                </code>
+                            <div className="rounded border border-subtle p-0 overflow-hidden">
+                                <SyntaxHighlighter
+                                    language="sql"
+                                    style={atomOneDark}
+                                    customStyle={{
+                                        margin: 0,
+                                        padding: '1rem',
+                                        fontSize: '14px',
+                                        background: 'transparent',
+                                    }}
+                                    showLineNumbers={false}
+                                    wrapLongLines
+                                >
+                                    {item.sql || ''}
+                                </SyntaxHighlighter>
                             </div>
                         )}
                     </div>

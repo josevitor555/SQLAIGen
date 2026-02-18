@@ -50,13 +50,18 @@ export default class QueriesController {
     const validator = vine.compile(
       vine.object({
         question: vine.string().minLength(3).maxLength(1000),
-        identifier: vine.string().maxLength(64).optional()
+        identifier: vine.string().maxLength(64).optional(),
+        model: vine.string().minLength(3).maxLength(100).optional(),
       })
     )
 
     try {
       const payload = await validator.validate(request.all())
-      const analysis = await this.aiService.analyzeDataset(payload.question, payload.identifier)
+      const analysis = await this.aiService.analyzeDataset(
+        payload.question,
+        payload.identifier,
+        payload.model
+      )
 
       return {
         question: payload.question,

@@ -5,14 +5,21 @@ import { MobileHeader } from './components/system/MobileHeader';
 import { UploadSection } from './components/system/UploadSection';
 import { SchemaViewer } from './components/system/SchemaViewer';
 import { QueryLab } from './components/system/QueryLab';
-import { HistoryLog, type HistoryItem } from './components/system/HistoryLog';
+import { HistoryLog, type HistoryItem, HISTORY_STORAGE_KEY } from './components/system/HistoryLog';
 import { ModalCredits } from './components/system/ModalCredits';
 import { ChatMode } from './components/pages/ChatMode';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'upload' | 'schema' | 'query' | 'history' | 'chat'>('upload');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as HistoryItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [currentDataset, setCurrentDataset] = useState<string>('Nenhum conjunto de dados carregado');
   const [showCredits, setShowCredits] = useState(false);
 
@@ -66,6 +73,12 @@ function App() {
   };
 
   const clearHistory = () => setHistory([]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch {}
+  }, [history]);
 
   return (
     <div className="text-foreground bg-background h-screen flex overflow-hidden selection:bg-muted selection:text-foreground font-inter">

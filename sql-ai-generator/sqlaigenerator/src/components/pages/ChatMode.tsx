@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { Send, Loader2, User, Bot, Database } from 'lucide-react';
+import { ModelSelected } from '@/components/system/ModelSelected';
 
 export interface ChatMessage {
   id: string;
@@ -18,6 +19,9 @@ interface ChatModeProps {
 
 const API_URL = 'http://localhost:3333';
 const CHAT_IDENTIFIER_KEY = 'chat_identifier';
+const CHAT_DATASET_KEY = 'chat_current_dataset';
+const CHAT_MODEL_KEY = 'chat_current_model';
+const DEFAULT_MODEL_SLUG = 'langchain:mistral';
 
 function getOrCreateIdentifier(): string {
   let id = localStorage.getItem(CHAT_IDENTIFIER_KEY);
@@ -33,6 +37,20 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [identifier] = useState(() => getOrCreateIdentifier());
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    const stored = localStorage.getItem(CHAT_MODEL_KEY);
+    if (!stored) return DEFAULT_MODEL_SLUG;
+    if (stored === 'mistralai/mistral-small-24b') return DEFAULT_MODEL_SLUG;
+    return stored;
+  });
+  const [persistedDataset, setPersistedDataset] = useState<string>(() => {
+    const stored = localStorage.getItem(CHAT_DATASET_KEY) || '';
+    if (currentDataset && currentDataset !== 'Nenhum conjunto de dados carregado') {
+      localStorage.setItem(CHAT_DATASET_KEY, currentDataset);
+      return currentDataset;
+    }
+    return stored;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,6 +61,17 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    localStorage.setItem(CHAT_MODEL_KEY, selectedModel);
+  }, [selectedModel]);
+
+  useEffect(() => {
+    if (currentDataset && currentDataset !== 'Nenhum conjunto de dados carregado') {
+      setPersistedDataset(currentDataset);
+      localStorage.setItem(CHAT_DATASET_KEY, currentDataset);
+    }
+  }, [currentDataset]);
+
   // Carregar histórico ao montar (últimas 10 mensagens do identifier)
   useEffect(() => {
     if (!identifier) return;
@@ -51,13 +80,15 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
       .then((data) => {
         const list = (data.messages ?? []) as { id: number; role: 'user' | 'assistant'; content: string; createdAt: string }[];
         if (list.length > 0) {
-          setMessages(
-            list.map((m) => ({
-              id: `${m.role}-${m.id}`,
-              role: m.role,
-              content: m.content,
-              timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            }))
+          setMessages((prev) =>
+            prev.length === 0
+              ? list.map((m) => ({
+                id: `${m.role}-${m.id}`,
+                role: m.role,
+                content: m.content,
+                timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              }))
+              : prev
           );
         }
       })
@@ -69,7 +100,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
     if (!trimmed || isLoading) return;
 
     const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${crypto.randomUUID()}`,
       role: 'user',
       content: trimmed,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -82,7 +113,12 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
       const res = await fetch(`${API_URL}/chat/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: trimmed, identifier }),
+        body: JSON.stringify({
+          question: trimmed,
+          identifier,
+          dataset: persistedDataset || undefined,
+          model: selectedModel,
+        }),
       });
 
       const data = await res.json();
@@ -92,7 +128,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
       }
 
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: `assistant-${crypto.randomUUID()}`,
         role: 'assistant',
         content: data.response || 'Resposta processada.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -101,7 +137,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao processar sua mensagem.';
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: `assistant-${crypto.randomUUID()}`,
         role: 'assistant',
         content: 'Não foi possível processar sua pergunta.',
         error: errorMsg,
@@ -120,7 +156,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
     }
   };
 
-  const hasDataset = currentDataset && currentDataset !== 'Nenhum conjunto de dados carregado';
+  const hasDataset = Boolean(persistedDataset && persistedDataset !== 'Nenhum conjunto de dados carregado');
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto fade-in">
@@ -135,7 +171,7 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Database size={14} />
           <span>
-            Contexto: <span className="text-foreground font-medium">{currentDataset}</span>
+            Contexto: <span className="text-foreground font-medium">{persistedDataset || currentDataset}</span>
           </span>
         </div>
       </header>
@@ -274,10 +310,13 @@ export function ChatMode({ currentDataset }: ChatModeProps) {
             rows={2}
             className="w-full resize-none border-none bg-transparent p-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
           />
-          <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-subtle">
-            <span className="text-xs text-muted-foreground">
-              Pressione Enter para enviar, Shift+Enter para nova linha
-            </span>
+          <div className="flex justify-between items-center px-4 pb-3 pt-2 border-t border-subtle gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">
+                Pressione Enter para enviar, Shift+Enter para nova linha
+              </span>
+              <ModelSelected value={selectedModel} onChange={setSelectedModel} />
+            </div>
             <button
               onClick={sendMessage}
               disabled={!hasDataset || isLoading || !input.trim()}

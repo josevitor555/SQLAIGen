@@ -16,6 +16,9 @@ export default class ChatHistory extends BaseModel {
   declare role: ChatRole
 
   @column()
+  declare model: string | null
+
+  @column()
   declare content: string
 
   @column.dateTime({ autoCreate: true })
