@@ -18,10 +18,10 @@ Now supports multiple models via **OpenRouter** (Claude, Gemini, DeepSeek, etc.)
 
 ### Overview
 
-- **1 Problem:** Many users have data in CSV or tables but don’t know how to write SQL or aren’t familiar with the schema.
-- **2 Solution:** An application that accepts CSV uploads, builds a “semantic schema” (metadata + column embeddings), and provides:
-- **2.1 Query Lab:** natural-language question → AI-generated SQL.
-- **2.2 Conversation Mode:** a dialogue with an **AI Analyst**, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
+- **Problem:** Many users have data in CSV or tables but don’t know how to write SQL or aren’t familiar with the schema.
+- **Solution:** An application that accepts CSV uploads, builds a “semantic schema” (metadata + column embeddings), and provides:
+- [x] **Query Lab:** natural-language question → AI-generated SQL.
+- [x] **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
 
 The AI follows strict rules: it does not invent rankings from samples; it distinguishes frequency from sum; when exact data isn’t available, it suggests using SQL Mode. The system combines **friendly conversation** with **analytical rigor**.
 
@@ -56,6 +56,7 @@ The AI follows strict rules: it does not invent rankings from samples; it distin
 The system features a **Senior Data Analyst** persona who guides users in **Conversation Mode** and brings natural-language analyses to life.
 It is designed to be helpful, professional, and strictly data-driven, avoiding hallucinations about fictional entities.
 
+<!-- <img width="1024" height="1536" alt="morgan" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" /> -->
 
 ![WhatsApp Image 2026-02-15 at 00 39 32](https://github.com/user-attachments/assets/0bf54e03-2ac7-4b8c-b457-fa2a1f10b1e5)
 ![WhatsApp Image 2026-02-15 at 00 40 02](https://github.com/user-attachments/assets/8043bae8-dc1c-4093-a759-f84fda2007b5)
@@ -94,9 +95,7 @@ In these cases, the AI **analyzes the data** (statistics and samples) and the **
 - **Frontend:** React, TypeScript, Vite.
 - **Backend:** AdonisJS 6 (Node.js).
 - **Database:** PostgreSQL with pgvector extension (embeddings).
-- **AI:** 
-  - **Mistral** (via LangChain) for Embeddings.
-  - **OpenRouter** integration for Multi-Model Support (Claude, Gemini, DeepSeek, Mistral, etc.).
+- **AI:** Mistral (LangChain) for embeddings and text/SQL generation.
 
 ---
 
