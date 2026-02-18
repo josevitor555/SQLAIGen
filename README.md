@@ -19,8 +19,8 @@ The backend uses **embeddings** (Mistral) and **similarity search** (pgvector) t
 
 - **Problem:** Many users have data in CSV or tables but don’t know how to write SQL or aren’t familiar with the schema.
 - **Solution:** An application that accepts CSV uploads, builds a “semantic schema” (metadata + column embeddings), and provides:
-  1. **Query Lab:** natural-language question → AI-generated SQL.
-  2. **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
+- [x] **Query Lab:** natural-language question → AI-generated SQL.
+- [x] **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
 
 Connor follows strict rules: he does not invent rankings from samples; he distinguishes frequency from sum; when exact data isn’t available, he suggests using SQL Mode. The system combines **friendly conversation** with **analytical rigor**.
 
@@ -28,11 +28,11 @@ Connor follows strict rules: he does not invent rankings from samples; he distin
 
 ### Goals
 
-- Enable **data analysis in natural language**, lowering the SQL barrier.
-- Generate **valid PostgreSQL SQL** from text questions.
-- Provide a **conversational assistant (Connor)** that interprets questions, cites real examples, and suggests next steps.
-- Keep **schema consistency**: embeddings and metadata so that SQL and Connor’s answers reflect the loaded columns and tables.
-- Support **conversation history** (per session) and **query history** in the lab.
+- [x] Enable **data analysis in natural language**, lowering the SQL barrier.
+- [x] Generate **valid PostgreSQL SQL** from text questions.
+- [x] Provide a **conversational assistant (Connor)** that interprets questions, cites real examples, and suggests next steps.
+- [x] Keep **schema consistency**: embeddings and metadata so that SQL and Connor’s answers reflect the loaded columns and tables.
+- [x] Support **conversation history** (per session) and **query history** in the lab.
 
 ---
 
