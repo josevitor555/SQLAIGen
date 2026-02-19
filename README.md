@@ -88,7 +88,7 @@ In these cases, Connor **analyzes the data** (statistics and samples) and the **
 
 - **Frontend:** React, TypeScript, Vite.
 - **Backend:** AdonisJS 6 (Node.js).
-- **Database:** PostgreSQL with pgvector extension (embeddings).
+- **Database:** Supabase (PostgreSQL) with pgvector extension (embeddings).
 - **AI:** Mistral (LangChain) for embeddings and text/SQL generation.
 
 ---
