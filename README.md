@@ -56,10 +56,7 @@ The AI follows strict rules: it does not invent rankings from samples; it distin
 The system features a **Senior Data Analyst** persona who guides users in **Conversation Mode** and brings natural-language analyses to life.
 It is designed to be helpful, professional, and strictly data-driven, avoiding hallucinations about fictional entities.
 
-<!-- <img width="1024" height="1536" alt="morgan" src="https://github.com/user-attachments/assets/105abc83-6e2f-429b-9960-e835b79937c1" /> -->
-
-![WhatsApp Image 2026-02-15 at 00 39 32](https://github.com/user-attachments/assets/0bf54e03-2ac7-4b8c-b457-fa2a1f10b1e5)
-![WhatsApp Image 2026-02-15 at 00 40 02](https://github.com/user-attachments/assets/8043bae8-dc1c-4093-a759-f84fda2007b5)
+<img width="1919" height="944" alt="Captura de tela 2026-02-18 161254" src="https://github.com/user-attachments/assets/de5c2d0f-5472-44f9-af80-680298d63078" />
 
 ### Example usage with the “AI Models Benchmark 2026” dataset (Kaggle)
 
