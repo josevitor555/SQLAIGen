@@ -61,7 +61,7 @@ The **[AI Models Benchmark Dataset 2026 (Latest)](https://www.kaggle.com/dataset
 
 ---
 
-### Example 1: “Which AI model has the largest context window?”
+#### Example 1: “Which AI model has the largest context window?”
 
 - **Conversation Mode (Connor):** Connor uses the semantic schema and dataset statistics (e.g. columns like “context window” or “context_length”) to identify the model with the largest context window. The answer is in natural language, citing the model name and value when available, and may suggest refinements or follow-up questions.
 - **Query Lab:** The user types the same question; the system generates a SQL query, e.g.:
