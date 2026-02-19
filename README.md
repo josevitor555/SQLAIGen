@@ -19,8 +19,8 @@ The backend uses **embeddings** (Mistral) and **similarity search** (pgvector) t
 
 - **Problem:** Many users have data in CSV or tables but don’t know how to write SQL or aren’t familiar with the schema.
 - **Solution:** An application that accepts CSV uploads, builds a “semantic schema” (metadata + column embeddings), and provides:
-- [x] **Query Lab:** natural-language question → AI-generated SQL.
-- [x] **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
+    1. [x] **Query Lab:** natural-language question → AI-generated SQL.
+    2. [x] **Conversation Mode:** a dialogue with Connor, who analyzes the data (statistics, samples, precomputed aggregations) and responds in natural language without showing SQL, in a senior analyst tone.
 
 Connor follows strict rules: he does not invent rankings from samples; he distinguishes frequency from sum; when exact data isn’t available, he suggests using SQL Mode. The system combines **friendly conversation** with **analytical rigor**.
 
