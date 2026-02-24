@@ -1,9 +1,9 @@
-// ✅ Usar variável do .env.local
+// Usar variável do .env.local
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333'
 const TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '10000')
 
-console.log('🔍 API_URL configurada:', API_URL)
-console.log('🔍 TIMEOUT configurado:', TIMEOUT)
+console.log('API_URL configurada:', API_URL)
+console.log('TIMEOUT configurado:', TIMEOUT)
 
 interface RequestConfig {
   headers?: Record<string, string>
@@ -34,14 +34,14 @@ class ApiClient {
    */
   private handleError(error: any): never {
     if (error instanceof AggregateError) {
-      console.error('🔴 AggregateError:')
+      console.error('AggregateError:')
       error.errors.forEach((err, idx) => {
         console.error(`  [${idx}] ${err.message}`)
       })
     }
 
     if (error.name === 'AbortError') {
-      console.error('🔴 Timeout - Requisição demorou muito:', this.timeout + 'ms')
+      console.error('Timeout - Requisição demorou muito:', this.timeout + 'ms')
       throw {
         type: 'TIMEOUT_ERROR',
         message: `Requisição expirou após ${this.timeout}ms`,
@@ -50,7 +50,7 @@ class ApiClient {
 
     if (error instanceof TypeError) {
       console.error(
-        '🔴 Erro de Conexão - Verifique se Backend está rodando:',
+        'Erro de Conexão - Verifique se Backend está rodando:',
         error.message
       )
       throw {
@@ -59,7 +59,7 @@ class ApiClient {
       }
     }
 
-    console.error('❌ Erro na requisição:', error.message)
+    console.error('Erro na requisição:', error.message)
     throw {
       type: 'NETWORK_ERROR',
       message: error.message,
@@ -77,7 +77,7 @@ class ApiClient {
     const signal = this.createAbortSignal()
 
     try {
-      console.log(`📤 ${options.method || 'GET'} ${fullURL}`)
+      console.log(`${options.method || 'GET'} ${fullURL}`)
 
       const response = await fetch(fullURL, {
         ...options,
