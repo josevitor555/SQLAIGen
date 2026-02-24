@@ -12,4 +12,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+
+  server: {
+    port: 5173,
+    strictPort: false, // Se 5173 estiver em uso, tenta próxima porta
+  },
+
+  // Expor variáveis de ambiente
+  define: {
+    __API_URL__: JSON.stringify(process.env.VITE_API_URL),
+  },
 })
